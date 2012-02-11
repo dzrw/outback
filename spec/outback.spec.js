@@ -1,6 +1,6 @@
 describe('outback.js declarative bindings for backbone.js', function() {
 
-	xdescribe("are an extension", function() {
+	describe("are an extension", function() {
 
 		it("should have a few dependencies", function() {
 			expect($).toBeDefined();			
@@ -15,7 +15,7 @@ describe('outback.js declarative bindings for backbone.js', function() {
 
 	});
 
-	xdescribe("the test harness", function() {
+	describe("the test harness", function() {
 		
 		it("should add a custom binding handler named 'nop' to the list", function() {
 			expect(Backbone.outback.bindingHandlers.nop).toBeDefined();
@@ -23,7 +23,7 @@ describe('outback.js declarative bindings for backbone.js', function() {
 
 	});
 
-	xdescribe("are safe to drop into an existing view", function() {
+	describe("are safe to drop into an existing view", function() {
 		
 		beforeEach(function(){
 			this.model = new AModel({
@@ -44,7 +44,7 @@ describe('outback.js declarative bindings for backbone.js', function() {
 
 	});
 
-	xdescribe("provide basic debugging tools", function() {
+	describe("provide basic debugging tools", function() {
 		
 		beforeEach(function(){
 			this.model = new AModel({isVisible: false});
@@ -110,7 +110,7 @@ describe('outback.js declarative bindings for backbone.js', function() {
 			})
 		});
 
-		xdescribe('pays attention to the model', function() {
+		describe('pays attention to the model', function() {
 	
 			it('should subscribe to changes in the model when the view is rendered', function() {
 				var args, modelEvents;
@@ -150,7 +150,7 @@ describe('outback.js declarative bindings for backbone.js', function() {
 
 		describe('lets the DOM get in on the action', function() {
 			
-			xit('should init the binding handlers when the view is rendered', function() {
+			it('should init the binding handlers when the view is rendered', function() {
 				spyOn(Backbone.outback.bindingHandlers.nop, 'init').andCallThrough();
 
 				expect(Backbone.outback.bindingHandlers.nop.init).not.toHaveBeenCalled();
@@ -164,30 +164,30 @@ describe('outback.js declarative bindings for backbone.js', function() {
 				expect(Backbone.outback.bindingHandlers.nop.init.callCount).toBe(1);				
 			});
 
-			xit('should notify the binding handlers when the view is rendered', function() {
+			it('should notify the binding handlers when the view is rendered', function() {
 				spyOn(Backbone.outback.bindingHandlers.nop, 'update').andCallThrough();
 
 				expect(Backbone.outback.bindingHandlers.nop.update).not.toHaveBeenCalled();
 
 				this.view.render();
 
-				expect(Backbone.outback.bindingHandlers.nop.update).toHaveBeenCalled();
+				expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(1);
 
 				this.view.remove();
 
-				expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(1);				
+				expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(1);
 			});
 
-			xit('should notify the binding handlers when the model changes', function() {
+			it('should notify the binding handlers when the model changes', function() {
 				spyOn(Backbone.outback.bindingHandlers.nop, 'update').andCallThrough();
 
 				this.view.render();
 
-				expect(Backbone.outback.bindingHandlers.nop.update).toHaveBeenCalled();
+				expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(1);
 
 				this.model.set({isVisible: true});
 
-				expect(Backbone.outback.bindingHandlers.nop.update).toHaveBeenCalled();
+				expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(2);
 
 				this.view.remove();
 
@@ -195,18 +195,18 @@ describe('outback.js declarative bindings for backbone.js', function() {
 			});
 
 			it('should remove the binding handlers to when the view is removed', function() {
-				spyOn(Backbone.outback.bindingHandlers.nop, 'unbind').andCallThrough();
+				spyOn(Backbone.outback.bindingHandlers.nop, 'remove').andCallThrough();
 
-				expect(Backbone.outback.bindingHandlers.nop.unbind).not.toHaveBeenCalled();
+				expect(Backbone.outback.bindingHandlers.nop.remove).not.toHaveBeenCalled();
 
 				this.view.render();
 
-				expect(Backbone.outback.bindingHandlers.nop.unbind).not.toHaveBeenCalled();
+				expect(Backbone.outback.bindingHandlers.nop.remove).not.toHaveBeenCalled();
 
 				this.view.remove();
 
-				expect(Backbone.outback.bindingHandlers.nop.unbind).toHaveBeenCalled();
-				expect(Backbone.outback.bindingHandlers.nop.unbind.callCount).toBe(1);				
+				expect(Backbone.outback.bindingHandlers.nop.remove).toHaveBeenCalled();
+				expect(Backbone.outback.bindingHandlers.nop.remove.callCount).toBe(1);				
 			});
 
 		});
