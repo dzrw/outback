@@ -1,3 +1,9 @@
+Backbone.outback.bindingHandlers['nop'] = {
+	init: function (element, valueAccessor, allBindingsAccessor, view) {},
+	update: function (element, valueAccessor, allBindingsAccessor, view) {},
+	unbind: function (element, valueAccessor, allBindingsAccessor, view) {}		
+};
+
 AModel = Backbone.Model.extend({});
 
 TypicalView = Backbone.View.extend({
@@ -18,3 +24,4 @@ UnobtrusiveView = TypicalView.extend({
 		}
 	}
 });
+
