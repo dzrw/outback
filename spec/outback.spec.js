@@ -1,49 +1,140 @@
-describe('outback.js declarative bindings for backbone', function() {
-
-	AModel = Backbone.Model.extend({});
+describe('outback.js declarative bindings for backbone.js', function() {
 
 	beforeEach(function(){
 		this.model = new AModel({
 			villain: "mrMonster",
 			doctor: "Seuss",
 			pet: "cat",
-			isValid: false
+			isValid: true
 		});
 	});
 
-	describe("can be configured in the view rather than in the template", function() {
+	xdescribe("are an extension", function() {
 
-		UnobtrusiveView = Backbone.View.extend({
-			modelBindings: {
-				visible: Backbone.outback.modelRef('isValid')
-			}
-			render: function() {
-				var html = $("<div id='anchor'><p>Hello, World</p></div>");
-				this.$el.append(html);
-				Backbone.outback.bind(this);
-			},
-			remove: function() {
-				Backbone.outback.unbind(this);
-			}
+		it("should have a few dependencies", function() {
+			expect($).toBeDefined();			
+			expect(_).toBeDefined();			
+			expect(Backbone).toBeDefined();			
+			expect(rj).toBeDefined();			
 		});
 
-		beforeEach(function(){
-			this.view = new UnobtrusiveView({model: this.model});
+		it("should be defined in the Backbone namespace", function () {
+			expect(Backbone.outback).toBeDefined();			
+		});
+
+	});
+
+	xdescribe("are safe to drop into an existing view", function() {
+		
+		it("should work on views without any bindings", function() {
+			this.view = new TypicalView({model: this.model});
 			this.view.render();
 			this.el = this.view.$("#anchor");
+			expect(this.el.size()).toBe(1);
+			this.view.remove();	
 		});
 
-		afterEach(function() {
+	});
+
+	describe("provide basic debugging tools", function() {
+		
+		beforeEach(function(){
+			this.model = new AModel({
+				isVisible: false
+			});
+
+			this.view = new UnobtrusiveView({model: this.model});
+		});
+
+		xit("should be possible to obtain a data binding summary", function() {
+			var args;
+
+			this.view.bindingSummary = function() {};
+
+			spyOn(this.view, 'bindingSummary');
+
+			this.view.render();
+
+			expect(this.view.bindingSummary).toHaveBeenCalled();
+			
+			args = this.view.bindingSummary.mostRecentCall.args;
+			expect(args).toBeDefined();
+			expect(args.length).toBe(1);
+			expect(args[0].executableBindingsInstalled).toBe(1);
+
 			this.view.remove();
 		});
 
-		it("should hide the element when the associated model attribute is false", function() {
-			var el;
-			expect(el.is(":visible")).toBeFalsy();
-			this.model.set({isValid: true});
-			expect(el.is(":visible")).toBeTruthy();
+		it("should be possible to filter bindings", function() {
+			this.view.previewBinding = function() {};
+			this.view.bindingSummary = function() {};
+
+			spyOn(this.view, 'previewBinding').andReturn(false);
+			spyOn(this.view, 'bindingSummary');
+
+			this.view.render();
+
+			expect(this.view.previewBinding).toHaveBeenCalled();
+			expect(this.view.bindingSummary).toHaveBeenCalled();
+			
+			args = this.view.bindingSummary.mostRecentCall.args;
+			expect(args).toBeDefined();
+			expect(args.length).toBe(1);
+			expect(args[0].executableBindingsInstalled).toBe(0);
+
+			this.view.remove();	
 		});
 
 	});
 
+	xdescribe("provides a way to unobtrustively configure bindings", function() {
+
+		describe("where trivial one-way bindings", function() {
+
+			beforeEach(function(){
+				this.model = new AModel({
+					isVisible: false
+				});
+
+				this.view = new TypicalView({model: this.model});
+
+				// unobtrusive binding declarations
+				this.view.dataBindings = {
+					visible: Backbone.outback.modelRef('isVisible')			
+				};
+
+				this.view.render();
+				this.el = this.view.$("#anchor");
+			});
+
+			afterEach(function() {
+				this.view.remove();	
+			});
+
+			it('should be initialized properly', function() {
+				expect(this.el.size()).toBe(1);
+				expect(this.el.is(":visible")).toBeFalsy();
+			});
+
+			it('should respond to changes in the model', function() {
+				spyOn(this.model)
+				var spy = jasmine.createSpy("-change event spy-");
+
+				this.model.set({isValid: true});
+				expect(this.el.is(":visible")).toBeTruthy();
+
+				this.model.set({isValid: false});
+				expect(this.el.is(":visible")).toBeFalsy();
+			});
+		});
+
+		xdescribe("where two-way bindings", function() {
+			
+			it('should be tested', function() {
+
+				expect(false).toBeTruthy();
+
+			});
+		});
+	});
 });
