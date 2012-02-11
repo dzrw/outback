@@ -91,7 +91,7 @@
 			var interesting, modelAttrName;
 
 			interesting = value instanceof OutbackModelRef;
-			modelAttrName = value.modelAttrName;
+			modelAttrName = value && value.modelAttrName;
 
 			if (interesting && hop(model.attributes, modelAttrName)) {
 				return makeBindingDecl(model, modelAttrName);
@@ -156,14 +156,16 @@
 		allBindingsAccessor = function() { return allBindings; };
 		
 		_.each(bindingDecl.directives, function(binding, key) {
+			var executableBinding;
+
 			if (hop(bindingHandlers, key)) {
-				_.extend(binding, {
+				_.extend(executableBinding = {}, binding, {
 					element: bindingDecl.element,
 					handler: bindingHandlers[key],
 					allBindingsAccessor: allBindingsAccessor
 				});
 
-				executableBindings.push(binding);
+				executableBindings.push(executableBinding);
 			}
 
 			allBindings[key] = binding;        
@@ -191,12 +193,12 @@
 		updateFn = hop(binding.handler, 'update') ? binding.handler.update : nop;
 
 		binders.updates.push(function() { 
-			updateFn.apply(view, args); 
+			updateFn.apply(view, binderArgs); 
 		});
 
 		binders.modelSubs.push(function() {
 			binding.modelEvents.subscribe(modelEventName, function(m, val) {
-				updateFn.apply(view, args);	
+				updateFn.apply(view, binderArgs);	
 			});
 		});
 
@@ -206,13 +208,13 @@
 
 		if (hop(binding.handler, 'init')) {
 			binders.inits.push(function() {
-				binding.handler.init.apply(view, args); 
+				binding.handler.init.apply(view, binderArgs); 
 			});
 		}
 
 		if (hop(binding.handler, 'remove')) {
 			binders.unbinds.push(function() { 
-				binding.handler.unbind.apply(view, args); 
+				binding.handler.unbind.apply(view, binderArgs); 
 			});
 		}
 
@@ -223,14 +225,14 @@
 		this.modelAttrName = modelAttrName;
 	};
 
-	var OutbackBinder = function (view, model, bindingHandlers, options) {
+	var OutbackBinder = function (view, model, bindingHandlers) {
 		var allBinders;
 
 		allBinders = {
 			modelSubs: [],
 			inits: [],
 			updates: [],
-			unbinds: [],
+			removes: [],
 			modelUnsubs: []
 		};
 
@@ -294,7 +296,7 @@
 	// @remove: -> Backbone.outback.unbind @
 	Backbone.outback = {
 		version: "0.1.0",
-		bind: function(view, options){
+		bind: function(view){
 			view.__outback_binder = new OutbackBinder(view, view.model, Backbone.outback.bindingHandlers);	// TODO: Support for Collections
 			view.__outback_binder.bind();
 		},
