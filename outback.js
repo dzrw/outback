@@ -345,12 +345,12 @@
 		init: function (element, valueAccessor, allBindingsAccessor, view) {
 			var allBindings, eventName;
 			allBindings = allBindingsAccessor();
-			eventName = hop(allBindings, 'modelEventName') ? allBindings.modelEventName : false;
+			eventName = hop(allBindings, 'valueUpdate') ? allBindings.valueUpdate : "change";
 
 			$(element).on(eventName, function (e) {
 				var value, next;
 				value = valueAccessor();
-				next = this.val();
+				next = $(this).val();
 				value(next);
 			});
 		},
@@ -363,7 +363,7 @@
 		remove: function (element, valueAccessor, allBindingsAccessor, view) {
 			var allBindings, eventName;
 			allBindings = allBindingsAccessor();
-			eventName = hop(allBindings, 'modelEventName') ? allBindings.modelEventName : false;
+			eventName = hop(allBindings, 'valueUpdate') ? allBindings.valueUpdate : "change";
 
 			$(element).off(eventName);
 		}		
