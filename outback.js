@@ -44,16 +44,19 @@
 		};
 
 		valueAccessor = function() {
-			var args, modelAttr;
-			args = Array.prototype.slice.call(arguments);
-			if (args.length === 0) {
-				modelAttr = model.get(modelAttrName);
-				return modelAttr;
-			} else {
-				modelAttr = args[0];
-				model.set(modelAttrName, modelAttr);
-			}
-		};
+			return function() {
+				var args, modelAttr;
+				args = Array.prototype.slice.call(arguments);
+				if (args.length === 0) {
+					modelAttr = model.get(modelAttrName);
+					return modelAttr;
+				} else {
+					modelAttr = args[0];
+					model.set(modelAttrName, modelAttr);
+				}
+			};
+		}
+
 
 		return { 
 			modelAttrName: modelAttrName,
@@ -86,8 +89,8 @@
 		return function(k, value) {
 			var interesting, modelAttrName;
 
-			interesting = k === 'modelAttrName';
-			modelAttrName = value;
+			interesting = value instanceof OutbackModelRef;
+			modelAttrName = value.modelAttrName;
 
 			if (interesting && hop(model.attributes, modelAttrName)) {
 				return makeBindingDecl(model, modelAttrName);
@@ -219,6 +222,10 @@
 		return binders;	
 	}
 
+	var OutbackModelRef = function (modelAttrName) {
+		this.modelAttrName = modelAttrName;
+	};
+
 	var OutbackBinder = function (view, model, bindingHandlers, options) {
 		var allBinders;
 
@@ -267,7 +274,7 @@
 			eachfn(allBinders.modelUnsubs);
 			eachfn(allBinders.removes);
 		}
-	}	
+	};	
 	
 	// PUBLIC API FOR BACKBONE VIEWS
 	// @render: -> Backbone.outback.bind @
@@ -284,7 +291,68 @@
 				view.__outback_binder.unbind()
 			}
 		},
-		
+
+		modelRef: function(modelAttrName) {
+			return new OutbackModelRef(modelAttrName);
+		},
+
 		bindingHandlers: {}		
 	};
+
+	// ===================================
+	// STANDARD BINDING HANDLERS
+	// ===================================
+
+	// Attribute Usage: 
+	//   data-bind="visible: @modelAttr"
+	// 
+	// Unobtrusive Usage:
+	//   modelBindings:
+	//     'selector': { visible: Backbone.outback.modelRef('modelAttr') }
+	//
+	Backbone.outback.bindingHandlers['visible'] = {
+		update: function (element, valueAccessor, allBindingsAccessor, view) {
+			var value, methodName;
+			value = valueAccessor();
+			methodName = !!value() ? 'show' : 'hide';
+			$(element)[methodName]();
+		}
+	};
+
+	// Attribute Usage: 
+	//   data-bind="value: @modelAttr"
+	// 
+	// Unobtrusive Usage:
+	//   modelBindings:
+	//     'selector': { value: Backbone.outback.modelRef('modelAttr') }
+	//
+	Backbone.outback.bindingHandlers['value'] = {
+		init: function (element, valueAccessor, allBindingsAccessor, view) {
+			var allBindings, eventName;
+			allBindings = allBindingsAccessor();
+			eventName = hop(allBindings, 'modelEventName') ? allBindings.modelEventName : false;
+
+			$(element).on(eventName, function (e) {
+				var value, next;
+				value = valueAccessor();
+				next = this.val();
+				value(next);
+			});
+		},
+		update: function (element, valueAccessor, allBindingsAccessor, view) {
+			var value, next;
+			value = valueAccessor();
+			next = value();
+			$(element).val(next);
+		},
+		unbind: function (element, valueAccessor, allBindingsAccessor, view) {
+			var allBindings, eventName;
+			allBindings = allBindingsAccessor();
+			eventName = hop(allBindings, 'modelEventName') ? allBindings.modelEventName : false;
+
+			$(element).off(eventName);
+		}		
+	};
+
+
 }));
