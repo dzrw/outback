@@ -212,19 +212,58 @@ describe('outback.js declarative bindings for backbone.js', function() {
 		});
 	});
 
-	xdescribe("provides a way to unobtrustively configure bindings", function() {
+	describe("supports Knockout-inspired data-bind attributes", function() {
+		
+		beforeEach(function(){
+			this.model = new AModel({ isVisible: false });
+			this.view = new KnockoutView({model: this.model});
+		});
+		
+		it("should still pay attention to the model", function() {
+			var args, modelEvents;
 
-		describe("where trivial one-way bindings", function() {
+			this.view.previewBinding = function(binding) {
+				spyOn(binding.modelEvents, 'subscribe').andCallThrough();
+				spyOn(binding.modelEvents, 'unsubscribe').andCallThrough();
+				modelEvents = binding.modelEvents;
+				return true;
+			};
 
+			this.view.render();
+
+			expect(modelEvents.subscribe).toHaveBeenCalled();
+			expect(modelEvents.unsubscribe).not.toHaveBeenCalled();
+
+			this.view.remove();	
+
+			expect(modelEvents.subscribe.callCount).toBe(1);
+			expect(modelEvents.unsubscribe.callCount).toBe(1);
 		});
 
-		xdescribe("where two-way bindings", function() {
-			
-			it('should be tested', function() {
+		it("should still let the DOM get in on the action", function() {
+			spyOn(Backbone.outback.bindingHandlers.nop, 'init').andCallThrough();
+			spyOn(Backbone.outback.bindingHandlers.nop, 'update').andCallThrough();
+			spyOn(Backbone.outback.bindingHandlers.nop, 'remove').andCallThrough();
 
-				expect(false).toBeTruthy();
+			expect(Backbone.outback.bindingHandlers.nop.init).not.toHaveBeenCalled();
+			expect(Backbone.outback.bindingHandlers.nop.update).not.toHaveBeenCalled();
+			expect(Backbone.outback.bindingHandlers.nop.remove).not.toHaveBeenCalled();
 
-			});
+			this.view.render();
+
+			expect(Backbone.outback.bindingHandlers.nop.init).toHaveBeenCalled();
+			expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(1);
+			expect(Backbone.outback.bindingHandlers.nop.remove).not.toHaveBeenCalled();
+
+			this.model.set({isVisible: true});
+
+			expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(2);
+
+			this.view.remove();
+
+			expect(Backbone.outback.bindingHandlers.nop.init.callCount).toBe(1);				
+			expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(2);
+			expect(Backbone.outback.bindingHandlers.nop.remove.callCount).toBe(1);				
 		});
 	});
 });
