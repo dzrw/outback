@@ -307,11 +307,46 @@ describe('outback.js declarative bindings for backbone.js', function() {
 				expect(this.el.is(":visible")).toBeTruthy();
 
 				this.view.remove();
-
-				this.model.set({isVisible: false});
-				expect(this.el.is(":visible")).toBeTruthy();
 			});
 
+		});
+
+		describe('the value binding', function() {
+
+			beforeEach(function() {
+				this.model = new AModel({firstName: 'Abram'});
+				this.view = new FixtureView({model: this.model});
+				_.extend(this.view, {
+					innerHtml: "<input type='text' data-bind='value: @firstName'>"
+				})
+
+				this.view.render();
+				this.el = this.view.$('#anchor input');				
+			});
+
+			afterEach(function() {
+				this.view.remove();
+			})
+
+			it('should update the value of the DOM element when the model changes', function() {
+				expect(this.el.size() > 0).toBeTruthy();
+				expect(this.el.val()).toBe('Abram');
+
+				this.model.set({firstName: 'Abraham'});
+
+				expect(this.el.val()).toBe('Abraham');
+			});
+			
+			it('should update the model when the value of the DOM element changes', function() {
+				expect(this.el.size() > 0).toBeTruthy();
+				expect(this.el.val()).toBe('Abram');
+
+				this.el.val('Abraham');
+				this.el.trigger('change');
+
+				expect(this.model.get('firstName')).toBe('Abraham');
+			});
+			
 		});
 
 	});

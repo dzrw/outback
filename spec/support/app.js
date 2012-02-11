@@ -41,12 +41,16 @@ FixtureView = Backbone.View.extend({
 		this.setElement($('#fixture'));
     },
 
+    innerHtml: "<p>Hello, world</p>",
+
 	render: function() {
 		var html = $("<div id='anchor'></div>");
 		this.$el.empty().append(html);
+		this.$('#anchor').html(this.innerHtml);
 		Backbone.outback.bind(this);
 	},
 	remove: function() {
 		Backbone.outback.unbind(this);
+		this.$el.empty();
 	}
 });
