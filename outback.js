@@ -24,16 +24,20 @@
 		return Object.prototype.hasOwnProperty.call(context, p);
 	}
 
-	function makeBindingDecl (model, modelAttrName) {
-		var bind, unbind, valueAccessor;
+	function eachfn (list) {
+		_.each(list, function(fn, i) { fn(); });
+	}
 
-		bind = function(eventName, callback) {
+	function makeBindingDecl (model, modelAttrName) {
+		var subscribe, unsubscribe, valueAccessor;
+
+		subscribe = function(eventName, callback) {
 			var eventName;
 			eventName = eventName || "change:" + modelAttrName;
 			model.on(eventName, callback);
 		};
 
-		unbind = function(eventName) {
+		unsubscribe = function(eventName) {
 			var eventName;
 			eventName = eventName || "change:" + modelAttrName;
 			model.off(eventName);
@@ -53,9 +57,11 @@
 
 		return { 
 			modelAttrName: modelAttrName,
-			bind: bind,
-			unbind: unbind,
-			valueAccessor: valueAccessor
+			valueAccessor: valueAccessor,
+			modelEvents: {
+				subscribe: subscribe,
+				unsubscribe: unsubscribe
+			}
 		};		
 	}
 
@@ -98,15 +104,15 @@
 		selector = "*[data-bind]";
 
 		view.$(selector).each(function () { 
-			var element, bindingExpr, options;
+			var element, bindingExpr, directives;
 
 			element = view.$(this);
 			bindingExpr = element.attr('data-bind');
-			options = rj.parse(bindingExpr, makeBindingDeclReviver(model));
+			directives = rj.parse(bindingExpr, makeBindingDeclReviver(model));
 
 			bindingDecls.push({
 				element: element,
-				options: options
+				directives: directives
 			});
 		});
 
@@ -121,7 +127,7 @@
 		if (!hop(view, 'modelBindings')) return;
 
 		_.each(view.modelBindings, function(value, selector) {
-			var element, options;
+			var element, directives;
 
 			if(!hop(view.modelBindings, selector)) return;
 
@@ -129,11 +135,11 @@
 
 			if(element.size() === 0) return;
 
-			options = rj.revive(value, makeUnobtrusiveBindingDeclReviver(model));
+			directives = rj.revive(value, makeUnobtrusiveBindingDeclReviver(model));
 
 			bindingDecls.push({
 				element: element,
-				options: options
+				directives: directives
 			});
 		});
 
@@ -147,65 +153,69 @@
 		executableBindings = [];
 		allBindingsAccessor = function() { return allBindings; };
 		
-		_.each(bindingDecl, function(value, key) {
+		_.each(bindingDecl.directives, function(binding, key) {
 			if (!hop(bindingDecl, key)) return;
 
 			if (hop(bindingHandlers, key)) {
-				executableBindings.push({
-					binding: value,
-					bindingHandler: bindingHandlers[key],
+				_.extend(binding, {
+					element: bindingDecl.element,
+					handler: bindingHandlers[key],
 					allBindingsAccessor: allBindingsAccessor
 				});
+
+				executableBindings.push(binding);
 			}
 
-			allBindings[key] = value;        
+			allBindings[key] = binding;        
 		});
 
 		return executableBindings;
 	}
 
-	function applyBinding (executableBindings) {
-		var binders;
+	function applyBinding (view, binding) {
+		var binders, binderArgs, modelEventName, updateFn;
 
 		binders = {
+			modelSubs: [],
 			inits: [],
 			updates: [],
-			unbinds: []
+			unbinds: [],
+			modelUnsubs: []
 		};
 
-		_.each(executableBindings, function(executableBinding) {
-			var bindingHandler, value, allBindingsAccessor, args;
+		modelEventName = typeof binding.modelEventName === 'string' ? binding.modelEventName : false;
+		binderArgs = [binding.element, binding.valueAccessor, binding.allBindingsAccessor, view];
 
-			bindingHandler = item[0];
-			value = item[1];
-			allBindingsAccessor = item[2];
+		function nop() {}
 
-			args = [element, modelAccessor.valueAccessor, allBindingsAccessor, view ];
+		updateFn = hop(binding.handler, 'update') ? binding.handler.update : nop;
 
-			if (hop(bindingHandler, 'init')) {
-				binders.inits.push(function() { 
-					bindingHandler.init.apply(view, args); 
-				});
-			}
-
-			if (hop(bindingHandler, 'update')) {
-				binders.updates.push(function() { 
-					bindingHandler.update.apply(view, args); 
-				});
-	
-				modelAccessor.listen(false, function (m, val) {
-					bindingHandler.update.apply(view, args);
-				});
-			}
-
-			if (hop(bindingHandler, 'remove')) {
-				binders.unbinds.push(function() { 
-					modelAccessor.unbind();
-					bindingHandler.unbind.apply(view, args); 
-				});
-			}
+		binders.updates.push(function() { 
+			updateFn.apply(view, args); 
 		});
-		
+
+		binders.modelSubs.push(function() {
+			binding.modelEvents.subscribe(modelEventName, function(m, val) {
+				updateFn.apply(view, args);	
+			});
+		});
+
+		binders.modelUnsubs.push(function () {
+			binding.modelEvents.unsubscribe(modelEventName);
+		})
+
+		if (hop(binding.handler, 'init')) {
+			binders.inits.push(function() {
+				binding.handler.init.apply(view, args); 
+			});
+		}
+
+		if (hop(binding.handler, 'remove')) {
+			binders.unbinds.push(function() { 
+				binding.handler.unbind.apply(view, args); 
+			});
+		}
+
 		return binders;	
 	}
 
@@ -213,18 +223,12 @@
 		var allBinders;
 
 		allBinders = {
+			modelSubs: [],
 			inits: [],
 			updates: [],
-			removes: [],
+			unbinds: [],
+			modelUnsubs: []
 		};
-
-		var eachfn = function (list) {
-			_.each(list, function(fn, i) { 
-				if (typeof fn === 'function') {
-					fn(); 
-				}
-			});
-		}
 
 		this.bind = function () {
 			var bindingDecls, bindings;
@@ -239,32 +243,39 @@
 			});
 
 			_.each(bindings, function (binding) {
-				binders = applyBinding(binding);
+				binders = applyBinding(view, binding);
 
+				arrayConcat(allBinders.modelSubs, binders.modelSubs);
 				arrayConcat(allBinders.inits, binders.inits);
 				arrayConcat(allBinders.updates, binders.updates);
 				arrayConcat(allBinders.removes, binders.unbinds);
-			})
+				arrayConcat(allBinders.modelUnsubs, binders.modelUnsubs);
+			});
 
-			// First run all the inits, so bindings can register for notification on changes
+			// Run binders in stages because we want to avoid cascades.
+
 			eachfn(allBinders.inits);
-
-			// ... then run all the updates, which might trigger changes even on the first evaluation
 			eachfn(allBinders.updates);
+			eachfn(allBinders.modelSubs);
+
+			// Fire a single model change event to sync the DOM.
+
+			//model.trigger('change');
 		},
 
 		this.unbind = function () {
+			eachfn(allBinders.modelUnsubs);
 			eachfn(allBinders.removes);
 		}
 	}	
 	
 	// PUBLIC API FOR BACKBONE VIEWS
-	// @render: -> ModelBinding.bind @, options
-	// @remove: -> ModelBinding.unbind @
+	// @render: -> Backbone.outback.bind @
+	// @remove: -> Backbone.outback.unbind @
 	Backbone.outback = {
 		version: "0.1.0",
-		bind: function(view, options){
-			view.__outback_binder = new OutbackBinder(view, view.model, bindingHandlers, options);	// TODO: Support for Collections
+		bind: function(view){
+			view.__outback_binder = new OutbackBinder(view, view.model, bindingHandlers);	// TODO: Support for Collections
 			view.__outback_binder.bind();
 		},
 
