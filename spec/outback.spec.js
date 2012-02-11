@@ -1,14 +1,5 @@
 describe('outback.js declarative bindings for backbone.js', function() {
 
-	beforeEach(function(){
-		this.model = new AModel({
-			villain: "mrMonster",
-			doctor: "Seuss",
-			pet: "cat",
-			isValid: true
-		});
-	});
-
 	xdescribe("are an extension", function() {
 
 		it("should have a few dependencies", function() {
@@ -26,6 +17,15 @@ describe('outback.js declarative bindings for backbone.js', function() {
 
 	xdescribe("are safe to drop into an existing view", function() {
 		
+		beforeEach(function(){
+			this.model = new AModel({
+				villain: "mrMonster",
+				doctor: "Seuss",
+				pet: "cat",
+				isValid: true
+			});
+		});
+
 		it("should work on views without any bindings", function() {
 			this.view = new TypicalView({model: this.model});
 			this.view.render();
@@ -39,14 +39,15 @@ describe('outback.js declarative bindings for backbone.js', function() {
 	describe("provide basic debugging tools", function() {
 		
 		beforeEach(function(){
-			this.model = new AModel({
-				isVisible: false
-			});
-
+			this.model = new AModel({isVisible: false});
 			this.view = new UnobtrusiveView({model: this.model});
 		});
 
-		xit("should be possible to obtain a data binding summary", function() {
+		afterEach(function() {
+			this.view.remove();
+		})
+
+		it("should be possible to obtain a data binding summary", function() {
 			var args;
 
 			this.view.bindingSummary = function() {};
@@ -61,11 +62,11 @@ describe('outback.js declarative bindings for backbone.js', function() {
 			expect(args).toBeDefined();
 			expect(args.length).toBe(1);
 			expect(args[0].executableBindingsInstalled).toBe(1);
-
-			this.view.remove();
 		});
 
 		it("should be possible to filter bindings", function() {
+			var args;
+
 			this.view.previewBinding = function() {};
 			this.view.bindingSummary = function() {};
 
@@ -82,7 +83,7 @@ describe('outback.js declarative bindings for backbone.js', function() {
 			expect(args.length).toBe(1);
 			expect(args[0].executableBindingsInstalled).toBe(0);
 
-			this.view.remove();	
+			this.view.remove();
 		});
 
 	});
