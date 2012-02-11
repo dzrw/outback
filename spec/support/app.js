@@ -1,7 +1,7 @@
 Backbone.outback.bindingHandlers['nop'] = {
 	init: function (element, valueAccessor, allBindingsAccessor, view) {},
 	update: function (element, valueAccessor, allBindingsAccessor, view) {},
-	unbind: function (element, valueAccessor, allBindingsAccessor, view) {}		
+	remove: function (element, valueAccessor, allBindingsAccessor, view) {}		
 };
 
 AModel = Backbone.Model.extend({});

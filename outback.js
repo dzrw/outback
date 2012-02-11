@@ -181,7 +181,7 @@
 			modelSubs: [],
 			inits: [],
 			updates: [],
-			unbinds: [],
+			removes: [],
 			modelUnsubs: []
 		};
 
@@ -213,8 +213,8 @@
 		}
 
 		if (hop(binding.handler, 'remove')) {
-			binders.unbinds.push(function() { 
-				binding.handler.unbind.apply(view, binderArgs); 
+			binders.removes.push(function() { 
+				binding.handler.remove.apply(view, binderArgs); 
 			});
 		}
 
@@ -264,7 +264,7 @@
 				arrayConcat(allBinders.modelSubs, binders.modelSubs);
 				arrayConcat(allBinders.inits, binders.inits);
 				arrayConcat(allBinders.updates, binders.updates);
-				arrayConcat(allBinders.removes, binders.unbinds);
+				arrayConcat(allBinders.removes, binders.removes);
 				arrayConcat(allBinders.modelUnsubs, binders.modelUnsubs);
 
 				summary.executableBindingsInstalled++;
@@ -360,7 +360,7 @@
 			next = value();
 			$(element).val(next);
 		},
-		unbind: function (element, valueAccessor, allBindingsAccessor, view) {
+		remove: function (element, valueAccessor, allBindingsAccessor, view) {
 			var allBindings, eventName;
 			allBindings = allBindingsAccessor();
 			eventName = hop(allBindings, 'modelEventName') ? allBindings.modelEventName : false;
