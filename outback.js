@@ -17,7 +17,8 @@
 	};
 
 	function arrayConcat (first, second) {
-		Array.prototype.push.call(first, second);
+		Array.prototype.push.apply(first, second);
+		return first;
 	}
 
 	function hop(context, p) {
@@ -123,27 +124,25 @@
 	}
 
 	function parseUnobtrusiveBindingDecls (view, model) {
-		var bindingDecls, root;
+		var bindingDecls, root, viewAttr;
 
 		bindingDecls = [];
+		viewAttr = 'dataBindings';	// TODO: hard-coded view attribute should be configurable
 
-		if (!hop(view, 'modelBindings')) return;
+		_.each(view[viewAttr], function(value, selector) {
+			if(!hop(view[viewAttr], selector)) return;
 
-		_.each(view.modelBindings, function(value, selector) {
 			var element, directives;
-
-			if(!hop(view.modelBindings, selector)) return;
-
 			element = view.$(selector);
 
-			if(element.size() === 0) return;
+			if(element.size() !== 0) {
+				directives = rj.revive(value, makeUnobtrusiveBindingDeclReviver(model));
 
-			directives = rj.revive(value, makeUnobtrusiveBindingDeclReviver(model));
-
-			bindingDecls.push({
-				element: element,
-				directives: directives
-			});
+				bindingDecls.push({
+					element: element,
+					directives: directives
+				});
+			}
 		});
 
 		return bindingDecls;
@@ -157,8 +156,6 @@
 		allBindingsAccessor = function() { return allBindings; };
 		
 		_.each(bindingDecl.directives, function(binding, key) {
-			if (!hop(bindingDecl, key)) return;
-
 			if (hop(bindingHandlers, key)) {
 				_.extend(binding, {
 					element: bindingDecl.element,
@@ -238,7 +235,11 @@
 		};
 
 		this.bind = function () {
-			var bindingDecls, bindings;
+			var bindingDecls, bindings, summary;
+
+			summary = {
+				executableBindingsInstalled: 0
+			};
 
 			bindingDecls = [];
 			arrayConcat(bindingDecls, parseDataBindAttrBindingDecls(view, model));
@@ -249,6 +250,12 @@
 				arrayConcat(bindings, filterExecutableBindings(bindingDecl, bindingHandlers));
 			});
 
+			if (typeof view.previewBinding === 'function') {
+				bindings = _.filter(bindings, function(binding) {
+					return view.previewBinding(binding);
+				});
+			}
+
 			_.each(bindings, function (binding) {
 				binders = applyBinding(view, binding);
 
@@ -257,6 +264,8 @@
 				arrayConcat(allBinders.updates, binders.updates);
 				arrayConcat(allBinders.removes, binders.unbinds);
 				arrayConcat(allBinders.modelUnsubs, binders.modelUnsubs);
+
+				summary.executableBindingsInstalled++;
 			});
 
 			// Run binders in stages because we want to avoid cascades.
@@ -268,6 +277,10 @@
 			// Fire a single model change event to sync the DOM.
 
 			//model.trigger('change');
+
+			if (typeof view.bindingSummary === 'function') {
+				view.bindingSummary(summary);
+			}
 		},
 
 		this.unbind = function () {
@@ -281,8 +294,8 @@
 	// @remove: -> Backbone.outback.unbind @
 	Backbone.outback = {
 		version: "0.1.0",
-		bind: function(view){
-			view.__outback_binder = new OutbackBinder(view, view.model, bindingHandlers);	// TODO: Support for Collections
+		bind: function(view, options){
+			view.__outback_binder = new OutbackBinder(view, view.model, Backbone.outback.bindingHandlers);	// TODO: Support for Collections
 			view.__outback_binder.bind();
 		},
 
@@ -307,7 +320,7 @@
 	//   data-bind="visible: @modelAttr"
 	// 
 	// Unobtrusive Usage:
-	//   modelBindings:
+	//   dataBindings:
 	//     'selector': { visible: Backbone.outback.modelRef('modelAttr') }
 	//
 	Backbone.outback.bindingHandlers['visible'] = {
@@ -323,7 +336,7 @@
 	//   data-bind="value: @modelAttr"
 	// 
 	// Unobtrusive Usage:
-	//   modelBindings:
+	//   dataBindings:
 	//     'selector': { value: Backbone.outback.modelRef('modelAttr') }
 	//
 	Backbone.outback.bindingHandlers['value'] = {
