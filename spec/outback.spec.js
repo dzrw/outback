@@ -209,6 +209,18 @@ describe('outback.js declarative bindings for backbone.js', function() {
 				expect(Backbone.outback.bindingHandlers.nop.remove.callCount).toBe(1);				
 			});
 
+			it('should no longer respond to model changes after the view is removed', function() {
+				spyOn(Backbone.outback.bindingHandlers.nop, 'update').andCallThrough();
+
+				this.view.render();
+				this.view.remove();
+
+				expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(1);				
+
+				this.model.set({isVisible: true});
+
+				expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(1);				
+			});
 		});
 	});
 
@@ -265,5 +277,42 @@ describe('outback.js declarative bindings for backbone.js', function() {
 			expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(2);
 			expect(Backbone.outback.bindingHandlers.nop.remove.callCount).toBe(1);				
 		});
+	});
+
+	describe('comes standard with a vast array of working bindings', function() {
+		
+		describe('the visible binding', function () {
+
+			it('should toggle the visibility of the bound element', function() {
+
+				this.model = new AModel({isVisible: true});
+				this.view = new FixtureView({model: this.model});
+				_.extend(this.view, {
+					dataBindings: {
+						'#anchor': {
+							visible: Backbone.outback.modelRef('isVisible')
+						}	
+					}
+				})
+
+				this.view.render();
+				this.el = this.view.$('#anchor');
+
+				expect(this.el.is(":visible")).toBeTruthy();
+
+				this.model.set({isVisible: false});
+				expect(this.el.is(":visible")).toBeFalsy();
+
+				this.model.set({isVisible: 'a string'});
+				expect(this.el.is(":visible")).toBeTruthy();
+
+				this.view.remove();
+
+				this.model.set({isVisible: false});
+				expect(this.el.is(":visible")).toBeTruthy();
+			});
+
+		});
+
 	});
 });

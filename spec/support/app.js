@@ -35,3 +35,18 @@ KnockoutView = Backbone.View.extend({
 		Backbone.outback.unbind(this);
 	}
 });
+
+FixtureView = Backbone.View.extend({
+    initialize: function() {
+		this.setElement($('#fixture'));
+    },
+
+	render: function() {
+		var html = $("<div id='anchor'></div>");
+		this.$el.empty().append(html);
+		Backbone.outback.bind(this);
+	},
+	remove: function() {
+		Backbone.outback.unbind(this);
+	}
+});
