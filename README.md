@@ -54,13 +54,15 @@ Yes.
 
 ## Which bindings are currently supported?
 
-[visible][v], [text][t], [html][h], [css][css], ~~style~~, [attr][attr], [value][value],
+[visible][v], [text][t], [html][h], [css][css], ~~style~~, [attr][attr], ~~click~~, ~~event~~, ~~submit~~, [enable][en], [disable][de], [value][value]
 
 [v]: http://knockoutjs.com/documentation/visible-binding.html
 [t]: http://knockoutjs.com/documentation/text-binding.html
 [h]: http://knockoutjs.com/documentation/html-binding.html
 [css]: http://knockoutjs.com/documentation/css-binding.html
 [attr]: http://knockoutjs.com/documentation/attr-binding.html
+[en]: http://knockoutjs.com/documentation/enable-binding.html
+[de]: http://knockoutjs.com/documentation/disable-binding.html
 [value]: http://knockoutjs.com/documentation/value-binding.html
 
 ## Can I add my own custom bindings?
@@ -106,7 +108,7 @@ No.
 1. `data-bind` attributes are handled by [rj](https://github.com/politician/relaxed-json-parser) which recognizes a small superset of JSON.  Specifically, the `@name` notation is parsed using the rules for JavaScript identifiers.
 2. Personally, I don't think it's a good idea to put logic in markup.
 
-## outback tries to protect you from XSS
+## XSS
 
 The `text`, `value`, and `attr` bindings use `model.escape` instead of `model.get` to help defend against XSS attacks.  This feature may be turned off by including `escape: false` in the binding configuration.  The `html` binding uses jQuery's natural mechanism and is not overridable.
 
