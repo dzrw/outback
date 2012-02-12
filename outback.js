@@ -1,7 +1,11 @@
-// AMD anonymous module enclosure.  Registers into the Backbone namespace
-// as Backbone.outback.
+/* outback.js v0.1.0 - a data binding library for backbone
+   (c) David Zarlengo -- http://github.com/politician/outback
+   License: MIT (http://www.opensource.org/licenses/mit-license.php)
+*/
 
 (function(root, factory) {
+// AMD anonymous module enclosure.  Registers into the Backbone namespace
+// as Backbone.outback.
 	if (typeof define === 'function' && define.amd) {
 		// AMD. Register as an anonymous module.
 		define(['jquery', 'underscore', 'backbone', 'rj'], factory);
