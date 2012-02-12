@@ -687,4 +687,64 @@
 		};
 	})();
 
+	/*	The "checked" binding
+
+		Usage:
+		data-bind="checked: @modelAttr"
+
+			if the element is a checkbox, then @modelAttr is interpreted as 
+			truthy or falsy; otherwise, if the element is a radio button
+			@modelAttr is interpreted as the value of the radio button
+
+		Purpose: The checked binding links a checkable form control — i.e., a 
+		checkbox (<input type='checkbox'>) or a radio button 
+		(<input type='radio'>) — with a property on your view model.
+	*/
+	Backbone.outback.bindingHandlers['checked'] = (function() {
+		function domRead($el) {
+			var checked, label;
+			if ($el.attr('type') === 'checkbox') {
+				checked = $el.attr('checked');
+				return _.isUndefined(checked) ? false : true;
+			} else{
+				label = $el.val();
+				return label;
+			}			
+		}
+
+		function domWrite($el, actual) {
+			var checked;
+			switch($el.attr('type')) {
+				case 'radio':
+					checked = $el.val() === actual
+					$el.prop('checked', checked);
+					break;
+
+				case 'checkbox':
+				default:
+					checked = !!actual;
+					$el.prop('checked', checked);
+					break;
+			}
+		}
+		
+		return {
+			init: function (element, valueAccessor, allBindingsAccessor, view) {
+				$(element).on('change', function (e) {
+					var domValue;
+					domValue = domRead($(element));
+					valueAccessor()(domValue);
+				});			
+			},
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var value;
+				value = valueAccessor();
+				domWrite($(element), value());
+			},
+			remove: function (element, valueAccessor, allBindingsAccessor, view) {
+				$(element).off('change');
+			}		
+		};
+	})();
+
 }));
