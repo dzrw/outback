@@ -491,6 +491,55 @@
 		}
 	};
 
+	/*	The "attr" binding
+
+		Usage:
+		data-bind="attr: { attr1: @modelAttr1, attr2: @modelAttr2 }, escape: <truthy>"
+
+			@modelAttr is interpreted as attribute values
+			
+			escape controls whether or not an HTML-escaped version of a model's
+			attribute is used.  Using escape to retrieve attributes will 
+			prevent XSS attacks.  The default is true.
+
+		Purpose: The attr binding provides a generic way to set the value of
+		any attribute for the associated DOM element.
+
+		Remarks: If the attribute is being set to undefined, null, or the empty
+		string, it is removed instead. Attributes may be set to null.
+
+	*/
+	Backbone.outback.bindingHandlers['attr'] = {
+		update: function (element, valueAccessor, allBindingsAccessor, view) {
+			var $el, binding, options;
+			$el = element;
+			binding = allBindingsAccessor('css');
+			
+			options = {
+				escape: allBindingsAccessor.testBoolean('escape', true)
+			};
+
+			var parents, value, className, hasClass;
+			parents = valueAccessor({parents: true});
+			if (parents.length !== 1) return;
+			attrName = parents[0];
+			attrValue = valueAccessor(options)();
+
+			if (_.isUndefined(attrValue) || _.isNull(attrValue)) {
+				$el.removeAttr(attrName);
+				return;
+			}
+
+			attrValue = attrValue.toString();
+			if (attrValue === '') {
+				$el.removeAttr(attrName);
+				return;
+			}
+
+			$el.attr(attrName, attrValue);
+		}
+	};
+
 	// Working with Form Fields
 	//
 
