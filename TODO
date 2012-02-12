@@ -1,0 +1,31 @@
+- add support for metadata
+
+	data-bind="attr: { href: @url }, meta: { attr: href: { escape: false } }"
+
+	meta = valueAccessor({source: 'meta'});
+
+- add support for options
+
+	data-bind="value: @firstName, valueOptions: { valueUpdate: 'keypress' }"
+
+	options = valueAccessor({source: 'options'});
+
+- add bindings (checked, options, selectedOptions, uniqueName?)
+
+
+- binding to the view instead of the model 
+
+	option 1: view/model paradigm
+	data-bind="visible: @isSelected, visibleOptions: { durable: false }"
+
+	---or---
+
+	option 2: nested views paradigm
+
+	data-bind="visible: @isSelected, visibleOptions: { dataSource: '//' }"
+	data-bind="visible: @isSelected, visibleOptions: { dataSource: '//model' }" (default)
+
+	I think I'll start with option 1.  Backbone Views already raise events so there shouldn't be a need to bind through like option 2 implies.
+
+
+- dependency cycle detection / breakage
