@@ -311,6 +311,62 @@ describe('outback.js declarative bindings for backbone.js', function() {
 
 		});
 
+		describe('the text binding', function() {
+
+			beforeEach(function() {
+				this.model = new AModel({firstName: 'Abram'});
+				this.view = new FixtureView({model: this.model});
+				_.extend(this.view, {
+					innerHtml: "<span data-bind='text: @firstName'></span>"
+				})
+
+				this.view.render();
+				this.el = this.view.$('#anchor span');				
+			});
+
+			afterEach(function() {
+				this.view.remove();
+			})
+
+			it('should update the value of the DOM element when the model changes', function() {
+				expect(this.el.size() > 0).toBeTruthy();
+				expect(this.el.text()).toBe('Abram');
+
+				this.model.set({firstName: 'Abraham'});
+
+				expect(this.el.text()).toBe('Abraham');
+			});
+
+		});
+
+		describe('the html binding', function() {
+
+			beforeEach(function() {
+				this.model = new AModel({content: '<p>Hello, world!</p>'});
+				this.view = new FixtureView({model: this.model});
+				_.extend(this.view, {
+					innerHtml: "<span data-bind='html: @content'></span>"
+				})
+
+				this.view.render();
+				this.el = this.view.$('#anchor span');				
+			});
+
+			afterEach(function() {
+				this.view.remove();
+			})
+
+			it('should update the value of the DOM element when the model changes', function() {
+				expect(this.el.size() > 0).toBeTruthy();
+				expect(this.el.html()).toBe('<p>Hello, world!</p>');
+
+				this.model.set({content: '<span>A fine span.</span>'});
+
+				expect(this.el.html()).toBe('<span>A fine span.</span>');
+			});
+
+		});
+
 		describe('the value binding', function() {
 
 			beforeEach(function() {
@@ -346,7 +402,90 @@ describe('outback.js declarative bindings for backbone.js', function() {
 
 				expect(this.model.get('firstName')).toBe('Abraham');
 			});
+		});
+
+	});
+
+	describe('helps prevent XSS attacks', function() {
+		var xssPayload = "<script>(function() { var xss = 'in ur page, hackin ur users'; })();</script>";
+		var xssPayloadEscaped = '&lt;script&gt;(function() { var xss = &#x27;in ur page, hackin ur users&#x27;; })();&lt;&#x2F;script&gt;'
+
+		beforeEach(function() {
+			this.addMatchers({
+				toBeSafe: function(selector, methodName) {
+					var view, $el, content;
+
+					view = this.actual;
+
+					view.render();
+					$el = view.$(selector);
+					content = $el[methodName]();
+
+					return content === xssPayloadEscaped;
+				},
+
+				toBeExploited: function(selector, methodName) {
+					var view, $el, content;
+
+					view = this.actual;
+					view.dataBindings[selector].escape = false;
+
+					view.render();
+					$el = view.$(selector);
+					content = $el[methodName]();
+					
+					return content === xssPayload;
+				}
+			});
+
+			this.model = new AModel({content: xssPayload});
+			this.view = new FixtureView({model: this.model});
+		});
+
+		afterEach(function() {
+			this.view.remove();
+		});
+
+		describe('the value binding', function() {
+			beforeEach(function() {
+				_.extend(this.view, {
+					innerHtml: "<input type='text'>",
+					dataBindings: {
+						'#anchor input': {
+							value: Backbone.outback.modelRef('content')
+						}
+					}
+				});
+			});
 			
+			it('should escape values from the model by default', function () {
+				expect(this.view).toBeSafe('#anchor input', 'val');
+			});
+
+			it('should allow you to shoot yourself in the foot', function () {
+				expect(this.view).toBeExploited('#anchor input', 'val');
+			});
+		});
+
+		describe('the text binding', function() {
+			beforeEach(function() {
+				_.extend(this.view, {
+					innerHtml: "<p></p>",
+					dataBindings: {
+						'#anchor p': {
+							text: Backbone.outback.modelRef('content')
+						}
+					}
+				});
+			});
+			
+			it('should escape values from the model by default', function () {
+				expect(this.view).toBeSafe('#anchor p', 'text');
+			});
+
+			it('should allow you to shoot yourself in the foot', function () {
+				expect(this.view).toBeExploited('#anchor p', 'text');
+			});
 		});
 
 	});
