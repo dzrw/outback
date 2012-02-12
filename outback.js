@@ -53,6 +53,10 @@
 					_.extend(options, args[0]);
 				}
 
+				if (!!options.parents) {
+					return binding.parents;
+				}
+
 				readMethod = options.escape ? 'escape' : 'get';
 
 				var value = function() {
@@ -178,6 +182,22 @@
 		return bindingDecls;
 	}
 
+	function findExecutableBindings (binding, key) {
+		if (hop(binding, 'valueAccessor')) {
+			binding.parents = binding.parents || [];
+			binding.parents.push(key);
+			return [binding];
+		} else {
+			var pile;
+			pile = [];
+			_.each(binding, function(item, key) {
+				if (!hop(binding, key)) return;
+				arrayConcat(pile, findExecutableBindings(item, key));
+			});
+			return pile;
+		}
+	}
+
 	function filterExecutableBindings (bindingDecl, bindingHandlers) {
 		var allBindings, bindingHandlers, allBindingsAccessor
 
@@ -207,18 +227,22 @@
 		};
 		
 		_.each(bindingDecl.directives, function(binding, key) {
-			var executableBinding;
+			var pile, executableBinding;
 
 			if (hop(bindingHandlers, key)) {
-				_.extend(executableBinding = {}, binding, {
-					element: bindingDecl.element,
-					handler: bindingHandlers[key],
-					allBindingsAccessor: allBindingsAccessor
+				pile = findExecutableBindings(binding, key);
+				_.each(pile, function(item) {
+
+					_.extend(executableBinding = {}, item, {
+						element: bindingDecl.element,
+						handler: bindingHandlers[key],
+						allBindingsAccessor: allBindingsAccessor
+					});
+
+					executableBinding.valueAccessor = executableBinding.valueAccessor(executableBinding);
+
+					executableBindings.push(executableBinding);
 				});
-
-				executableBinding.valueAccessor = executableBinding.valueAccessor(executableBinding);
-
-				executableBindings.push(executableBinding);
 			} else {
 				delete binding.valueAccessor;
 			}
@@ -439,6 +463,31 @@
 			value = valueAccessor(options);
 			next = value();
 			$(element).html(next);
+		}
+	};
+
+	/*	The "css" binding
+
+		Usage:
+		data-bind="css: { class1: @modelAttr1, class2: @modelAttr2 }"
+
+			@modelAttr is interpreted as truthy or falsy
+
+		Purpose: The css binding adds or removes one or more named CSS classes
+		to the associated DOM element.
+	*/
+	Backbone.outback.bindingHandlers['css'] = {
+		update: function (element, valueAccessor, allBindingsAccessor, view) {
+			var binding;
+			binding = allBindingsAccessor('css');
+
+			var parents, value, className, hasClass;
+			parents = valueAccessor({parents: true});
+			if (parents.length !== 1) return;
+			className = parents[0];
+			hasClass = valueAccessor()();
+
+			$(element)[hasClass ? 'addClass' : 'removeClass'](className);	
 		}
 	};
 
