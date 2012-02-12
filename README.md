@@ -54,7 +54,7 @@ Yes.
 
 ## Which bindings are currently supported?
 
-[visible][v], [text][t], [html][h], [css][css], ~~style~~, [attr][attr], ~~click~~, ~~event~~, ~~submit~~, [enable][en], [disable][de], [value][value]
+[visible][v], [text][t], [html][h], [css][css], ~~style~~, [attr][attr], ~~click~~, ~~event~~, ~~submit~~, [enable][en], [disable][de], [value][value], [hasfocus][hf]
 
 [v]: http://knockoutjs.com/documentation/visible-binding.html
 [t]: http://knockoutjs.com/documentation/text-binding.html
@@ -64,6 +64,7 @@ Yes.
 [en]: http://knockoutjs.com/documentation/enable-binding.html
 [de]: http://knockoutjs.com/documentation/disable-binding.html
 [value]: http://knockoutjs.com/documentation/value-binding.html
+[hf]: http://knockoutjs.com/documentation/hasfocus-binding.html
 
 ## Can I add my own custom bindings?
 
