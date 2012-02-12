@@ -322,13 +322,10 @@
 	// STANDARD BINDING HANDLERS
 	// ===================================
 
-	// Attribute Usage: 
-	//   data-bind="visible: @modelAttr"
-	// 
-	// Unobtrusive Usage:
-	//   dataBindings:
-	//     'selector': { visible: Backbone.outback.modelRef('modelAttr') }
-	//
+	/*
+		Usage:
+		data-bind="visible: @modelAttr"
+	*/
 	Backbone.outback.bindingHandlers['visible'] = {
 		update: function (element, valueAccessor, allBindingsAccessor, view) {
 			var value, methodName;
@@ -338,13 +335,12 @@
 		}
 	};
 
-	// Attribute Usage: 
-	//   data-bind="value: @modelAttr"
-	// 
-	// Unobtrusive Usage:
-	//   dataBindings:
-	//     'selector': { value: Backbone.outback.modelRef('modelAttr') }
-	//
+	/*
+		Usage:
+		data-bind="value: @modelAttr, valueUpdate: 'eventName'"
+
+		valueUpdate defaults to 'change' if not specified
+	*/
 	Backbone.outback.bindingHandlers['value'] = {
 		init: function (element, valueAccessor, allBindingsAccessor, view) {
 			var allBindings, eventName;
