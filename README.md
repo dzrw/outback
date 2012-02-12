@@ -52,12 +52,15 @@ class TodoView extends Backbone.View
 
 Yes.
 
-## Can I include arbitrary JavaScript expressions in my data-binds?
+## Which bindings are currently supported?
 
-No. 
+[visible][v], [text][t], [html][h], [css][css], [value][value]
 
-1. `data-bind` attributes are handled by [rj](https://github.com/politician/relaxed-json-parser) which recognizes a small superset of JSON.  Specifically, the `@name` notation is parsed using the rules for JavaScript identifiers.
-2. Personally, I don't think it's a good idea to put logic in markup.
+[v]: http://knockoutjs.com/documentation/visible-binding.html
+[t]: http://knockoutjs.com/documentation/text-binding.html
+[h]: http://knockoutjs.com/documentation/html-binding.html
+[css]: http://knockoutjs.com/documentation/css-binding.html
+[value]: http://knockoutjs.com/documentation/value-binding.html
 
 ## Can I add my own custom bindings?
 
@@ -95,9 +98,16 @@ Backbone.outback.bindingHandlers['custom'] = ->
 
 Thanks.
 
+## Can I include arbitrary JavaScript expressions in my data-binds?
+
+No. 
+
+1. `data-bind` attributes are handled by [rj](https://github.com/politician/relaxed-json-parser) which recognizes a small superset of JSON.  Specifically, the `@name` notation is parsed using the rules for JavaScript identifiers.
+2. Personally, I don't think it's a good idea to put logic in markup.
+
 ## Is there anything else you'd like to share?
 
-* The text and value bindings use `model.escape` instead of `model.get` to help defend against XSS attacks.  This feature may be turned off by including `escape: false` in the binding configuration.  Then `html` binding uses jQuery's natural mechanism and is not overridable.
+* The text and value bindings use `model.escape` instead of `model.get` to help defend against XSS attacks.  This feature may be turned off by including `escape: false` in the binding configuration.  The `html` binding uses jQuery's natural mechanism and is not overridable.
 
 ## What's on your todo list?
 
