@@ -542,6 +542,50 @@
 
 	// Working with Form Fields
 	//
+	
+	/*  The "enable" binding
+
+		Usage:
+		data-bind="enable: @modelAttr"
+
+			@modelAttr is interpreted as truthy or falsy
+		
+		Purpose: The enable binding causes the associated DOM element to be
+		enabled only when the parameter value is true.
+	*/
+	Backbone.outback.bindingHandlers['enable'] = {
+		update: function (element, valueAccessor, allBindingsAccessor, view) {
+			var enabled;
+			enabled = !!valueAccessor()();
+			if(enabled) {
+				$(element).removeAttr('disabled');
+			} else {
+				$(element).attr('disabled', 'disabled');
+			}
+		}
+	};
+	
+	/*  The "disable" binding
+
+		Usage:
+		data-bind="disable: @modelAttr"
+
+			@modelAttr is interpreted as truthy or falsy
+		
+		Purpose: The disable binding causes the associated DOM element to be
+		disable only when the parameter value is true.
+	*/
+	Backbone.outback.bindingHandlers['disable'] = {
+		update: function (element, valueAccessor, allBindingsAccessor, view) {
+			var disabled;
+			disabled = !!valueAccessor()();
+			if(disabled) {
+				$(element).attr('disabled', 'disabled');
+			} else {
+				$(element).removeAttr('disabled');
+			}
+		}
+	};
 
 	/*	The "value" binding
 
