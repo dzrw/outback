@@ -95,6 +95,10 @@ Backbone.outback.bindingHandlers['custom'] = ->
 
 Thanks.
 
+## Is there anything else you'd like to share?
+
+* The text and value bindings use `model.escape` instead of `model.get` to help defend against XSS attacks.  This feature may be turned off by including `escape: false` in the binding configuration.  Then `html` binding uses jQuery's natural mechanism and is not overridable.
+
 ## What's on your todo list?
 
 1. Add support for the majority of Knockout.js bindings
@@ -106,8 +110,7 @@ License
 
     The MIT License
 
-    Copyright (c) 2011 Reginald Braithwaite http://reginald.braythwayt.com
-    with contributions from Ben Alman and Oliver Steele
+    Copyright (c) 2012 David Zarlengo 
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
