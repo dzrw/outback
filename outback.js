@@ -636,4 +636,55 @@
 		}		
 	};
 
+	/*	The "hasfocus" binding
+
+		Usage:
+		data-bind="hasfocus: @modelAttr"
+
+			@modelAttr is interpreted as truthy or falsy
+
+		Purpose: The hasfocus binding links a DOM element’s focus state with a
+		model property. It is a two-way binding, so:
+
+			* If you set the viewmodel property to true or false, the 
+			  associated element will become focused or unfocused.
+
+			* If the user manually focuses or unfocuses the associated element,
+			  the model property will be set to true or false accordingly. This
+			  is useful if you’re building sophisticated forms in which 
+			  editable elements appear dynamically, and you would like to 
+			  control where the user should start typing, or respond to the 
+			  location of the caret.
+	*/
+	Backbone.outback.bindingHandlers['hasfocus'] = (function() {
+		var domUpdate = function(element, valueAccessor, allBindingsAccessor, view) {
+			$(element).on('focus', function (e) {
+				valueAccessor()(true);
+			});
+
+			$(element).on('blur', function (e) {
+				valueAccessor()(false);
+			});
+		};
+
+		return {
+			init: function (element, valueAccessor, allBindingsAccessor, view) {
+				domUpdate(element, valueAccessor, allBindingsAccessor, view);
+			},
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var $el, focus;
+				$el = element;
+				focus = !!valueAccessor()();
+
+				$el.off('focus blur');
+				$el[focus ? 'focus' : 'blur']();
+
+				domUpdate(element, valueAccessor, allBindingsAccessor, view);
+			},
+			remove: function (element, valueAccessor, allBindingsAccessor, view) {
+				$(element).off('focus blur');
+			}		
+		};
+	})();
+
 }));
