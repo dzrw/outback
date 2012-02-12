@@ -35,7 +35,7 @@ Yes.
 
 No. 
 
-1. data-bind attributes are handled by [rj][https://github.com/politician/relaxed-json-parser] which recognizes a small superset of JSON.  For example, the `@name` notation is parsed using the rules for JavaScript identifiers.
+1. `data-bind` attributes are handled by [rj](https://github.com/politician/relaxed-json-parser) which recognizes a small superset of JSON.  Specifically, the `@name` notation is parsed using the rules for JavaScript identifiers.
 2. Personally, I don't think it's a good idea to put logic in markup.
 
 ## Can I add my own custom bindings?
@@ -70,9 +70,9 @@ Backbone.outback.bindingHandlers['custom'] = ->
 
 ```
 
-## That looks almost exactly like how Knockout.js supports custom bindings.
+## That looks almost exactly like how Knockout does it.
 
-Yes, that's kind of the point.
+Thanks.
 
 ## Can I configure the bindings in code instead?
 
@@ -97,9 +97,9 @@ class TodoView extends Backbone.View
 
 ## What's on your todo list?
 
-# Add support for the majority of Knockout.js bindings
-# The ability to use the view instead of the model when binding
-# Cascading dropdowns, and other dependency management problems
+1. Add support for the majority of Knockout.js bindings
+2. The ability to use the view instead of the model when binding
+3. Cascading dropdowns, and other dependency management problems
 
 License
 ---
