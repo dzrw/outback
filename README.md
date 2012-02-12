@@ -54,7 +54,7 @@ Yes.
 
 ## Which bindings are currently supported?
 
-[visible][v], [text][t], [html][h], [css][css], ~~style~~, [attr][attr], ~~click~~, ~~event~~, ~~submit~~, [enable][en], [disable][de], [value][value], [hasfocus][hf]
+[visible][v], [text][t], [html][h], [css][css], ~~style~~, [attr][attr], ~~click~~, ~~event~~, ~~submit~~, [enable][en], [disable][de], [value][value], [hasfocus][hf], [checked][ck]
 
 [v]: http://knockoutjs.com/documentation/visible-binding.html
 [t]: http://knockoutjs.com/documentation/text-binding.html
@@ -65,6 +65,7 @@ Yes.
 [de]: http://knockoutjs.com/documentation/disable-binding.html
 [value]: http://knockoutjs.com/documentation/value-binding.html
 [hf]: http://knockoutjs.com/documentation/hasfocus-binding.html
+[ck]: http://knockoutjs.com/documentation/checked-binding.html
 
 ## Can I add my own custom bindings?
 
@@ -97,10 +98,6 @@ Backbone.outback.bindingHandlers['custom'] = ->
 		$el.off 'change'
 
 ```
-
-## That looks almost exactly like how Knockout does it.
-
-Thanks.
 
 ## Can I include arbitrary JavaScript expressions in my data-binds?
 
