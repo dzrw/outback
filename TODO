@@ -10,7 +10,7 @@
 
 	options = valueAccessor({source: 'options'});
 
-- add bindings (checked, options, selectedOptions, uniqueName?)
+- add bindings (options, selectedOptions, uniqueName?)
 
 
 - binding to the view instead of the model 
@@ -29,3 +29,5 @@
 
 
 - dependency cycle detection / breakage
+
+- build a todos app
