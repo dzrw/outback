@@ -1,4 +1,4 @@
-**outback** is a JavaScript library that extends [Backbone.js](http://documentcloud.github.com/backbone/) with support for [Knockout](http://knockoutjs.com)-inspired declarative bindings.
+**outback** is a JavaScript library that extends [Backbone.js](http://documentcloud.github.com/backbone/) with support for [Knockout](http://knockoutjs.com)-inspired declarative bindings. 
 
 ## tl;dr
 
@@ -24,6 +24,27 @@ Sprinkle data-bind attributes into your templates:
 <div id="edit">
 	<input type="text" class="todo-input" data-bind="value: @todo">
 </div>
+
+```
+
+## Can I configure the bindings in code instead?
+
+Yes, outback bindings can be setup in either code or markup.
+
+```CoffeeScript
+
+class TodoView extends Backbone.View
+	model: TodoModel
+
+	dataBindings:
+		'#edit .todo-input': 
+			value: Backbone.outback.modelRef 'todo'
+
+	@render: ->
+		Backbone.outback.bind @
+
+	@remove: ->
+		Backbone.outback.unbind @
 
 ```
 
@@ -73,27 +94,6 @@ Backbone.outback.bindingHandlers['custom'] = ->
 ## That looks almost exactly like how Knockout does it.
 
 Thanks.
-
-## Can I configure the bindings in code instead?
-
-Yes, outback bindings can be setup in either code or markup.
-
-```CoffeeScript
-
-class TodoView extends Backbone.View
-	model: TodoModel
-
-	dataBindings:
-		'#edit .todo-input': 
-			value: Backbone.outback.modelRef 'todo'
-
-	@render: ->
-		Backbone.outback.bind @
-
-	@remove: ->
-		Backbone.outback.unbind @
-
-```
 
 ## What's on your todo list?
 
