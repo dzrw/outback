@@ -33,6 +33,47 @@
 		_.each(list, function(fn, i) { fn(); });
 	}
 
+	function makeValueAccessorBuilder(model) {
+		return function(binding) {
+			var defaultOptions, modelAttrName;
+
+			defaultOptions = {
+				escape: false
+			};
+
+			modelAttrName = binding.modelAttrName;
+
+			var valueAccessor = function() {
+				var args, options, readMethod;
+
+				_.extend(options = {}, defaultOptions);
+
+				args = Array.prototype.slice.call(arguments);
+				if (args.length === 1) {
+					_.extend(options, args[0]);
+				}
+
+				readMethod = options.escape ? 'escape' : 'get';
+
+				var value = function() {
+					var args, modelAttr;
+					args = Array.prototype.slice.call(arguments);
+					if (args.length === 0) {
+						modelAttr = model[readMethod](modelAttrName);
+						return modelAttr;
+					} else {
+						modelAttr = args[0];
+						model.set(modelAttrName, modelAttr);
+					}
+				};
+
+				return value;
+			};
+
+			return valueAccessor;
+		};
+	}
+
 	function makeBindingDecl (model, modelAttrName) {
 		var subscribe, unsubscribe, valueAccessor;
 
@@ -48,24 +89,9 @@
 			model.off(eventName);
 		};
 
-		valueAccessor = function() {
-			return function() {
-				var args, modelAttr;
-				args = Array.prototype.slice.call(arguments);
-				if (args.length === 0) {
-					modelAttr = model.get(modelAttrName);
-					return modelAttr;
-				} else {
-					modelAttr = args[0];
-					model.set(modelAttrName, modelAttr);
-				}
-			};
-		}
-
-
 		return { 
 			modelAttrName: modelAttrName,
-			valueAccessor: valueAccessor,
+			valueAccessor: makeValueAccessorBuilder(model),
 			modelEvents: {
 				subscribe: subscribe,
 				unsubscribe: unsubscribe
@@ -157,7 +183,28 @@
 
 		allBindings = {};
 		executableBindings = [];
-		allBindingsAccessor = function() { return allBindings; };
+
+		allBindingsAccessor = function() { 
+			var args, modelAttr;
+			args = Array.prototype.slice.call(arguments);
+			if (args.length === 0) {
+				return allBindings;
+			} else if (hop(allBindings, args[0])) {
+				return allBindings[args[0]];
+			} else {
+				return undefined;
+			}
+		};
+
+		allBindingsAccessor.testString = function(key, defaultValue) {
+			var value = allBindingsAccessor(key);
+			return _.isUndefined(value) ? defaultValue : ''+value;
+		}
+
+		allBindingsAccessor.testBoolean = function(key, defaultValue) {
+			var value = allBindingsAccessor(key);
+			return _.isUndefined(value) ? !!defaultValue : !!value;
+		};
 		
 		_.each(bindingDecl.directives, function(binding, key) {
 			var executableBinding;
@@ -169,7 +216,11 @@
 					allBindingsAccessor: allBindingsAccessor
 				});
 
+				executableBinding.valueAccessor = executableBinding.valueAccessor(executableBinding);
+
 				executableBindings.push(executableBinding);
+			} else {
+				delete binding.valueAccessor;
 			}
 
 			allBindings[key] = binding;        
@@ -322,9 +373,19 @@
 	// STANDARD BINDING HANDLERS
 	// ===================================
 
-	/*
+	// Controlling Text and Appearance
+	//
+
+	/*  The "visible" binding
+
 		Usage:
 		data-bind="visible: @modelAttr"
+
+			@modelAttr is interpreted as truthy or falsy
+		
+		Purpose: The visible binding causes the associated DOM element to 
+		become hidden or visible according to the value you pass to the 
+		binding.
 	*/
 	Backbone.outback.bindingHandlers['visible'] = {
 		update: function (element, valueAccessor, allBindingsAccessor, view) {
@@ -335,39 +396,102 @@
 		}
 	};
 
-	/*
-		Usage:
-		data-bind="value: @modelAttr, valueUpdate: 'eventName'"
+	/*	The "text" binding
 
-		valueUpdate defaults to 'change' if not specified
+		Usage:
+		data-bind="text: @modelAttr, escape: <truthy>"
+
+			escape controls whether or not an HTML-escaped version of a model's
+			attribute is used.  Using escape to retrieve attributes will 
+			prevent XSS attacks.  The default is true.
+
+		Purpose: The text binding causes the associated DOM element to display
+		the text value of your parameter.
+	*/
+	Backbone.outback.bindingHandlers['text'] = {
+		update: function (element, valueAccessor, allBindingsAccessor, view) {
+			var value, options, next;
+
+			options = {
+				escape: allBindingsAccessor.testBoolean('escape', true)
+			};			
+
+			value = valueAccessor(options);
+			next = value();
+			$(element).text(next);
+		}
+	};
+
+	/*	The "html" binding
+
+		Usage:
+		data-bind="html: @modelAttr"
+
+		Purpose: The html binding causes the associated DOM element to display
+		the HTML specified by your parameter.
+
+		Remarks: The escape option is not honored by this binding because
+		jQuery provides its own XSS protection. 
+	*/
+	Backbone.outback.bindingHandlers['html'] = {
+		update: function (element, valueAccessor, allBindingsAccessor, view) {
+			var value, options, next;
+			value = valueAccessor(options);
+			next = value();
+			$(element).html(next);
+		}
+	};
+
+	// Working with Form Fields
+	//
+
+	/*	The "value" binding
+
+		Usage:
+		data-bind="value: @modelAttr, valueUpdate: 'eventName', escape: <truthy>"
+
+			valueUpdate defaults to 'change' if not specified
+
+			escape controls whether or not an HTML-escaped version of a model's
+			attribute is used.  Using escape to retrieve attributes will 
+			prevent XSS attacks.  The default is true.
+
+		Purpose: The value binding links the associated DOM element’s value 
+		with a property on your view model. This is typically useful with 
+		form elements such as <input>, <select> and <textarea>.
 	*/
 	Backbone.outback.bindingHandlers['value'] = {
 		init: function (element, valueAccessor, allBindingsAccessor, view) {
-			var allBindings, eventName;
-			allBindings = allBindingsAccessor();
-			eventName = hop(allBindings, 'valueUpdate') ? allBindings.valueUpdate : "change";
+			var options, eventName;
+			eventName = allBindingsAccessor.testString('valueUpdate', "change");
+
+			options = {
+				escape: allBindingsAccessor.testBoolean('escape', true)
+			};			
 
 			$(element).on(eventName, function (e) {
 				var value, next;
-				value = valueAccessor();
+				value = valueAccessor(options);
 				next = $(this).val();
 				value(next);
 			});
 		},
 		update: function (element, valueAccessor, allBindingsAccessor, view) {
-			var value, next;
-			value = valueAccessor();
+			var value, next, options;
+			options = {
+				escape: allBindingsAccessor.testBoolean('escape', true)
+			};			
+
+			value = valueAccessor(options);
 			next = value();
 			$(element).val(next);
 		},
 		remove: function (element, valueAccessor, allBindingsAccessor, view) {
-			var allBindings, eventName;
-			allBindings = allBindingsAccessor();
-			eventName = hop(allBindings, 'valueUpdate') ? allBindings.valueUpdate : "change";
+			var eventName;
+			eventName = allBindingsAccessor.testString('valueUpdate', "change");
 
 			$(element).off(eventName);
 		}		
 	};
-
 
 }));
