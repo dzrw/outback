@@ -115,12 +115,6 @@ The `text`, `value`, and `attr` bindings use `model.escape` instead of `model.ge
 <a data-bind="attr: { href: @url }, escape: false"></a>
 ```
 
-## What's on your todo list?
-
-1. Add support for the majority of Knockout.js bindings
-2. The ability to use the view instead of the model when binding
-3. Cascading dropdowns, and other dependency management problems
-
 License
 ---
 

@@ -403,27 +403,51 @@
 	/*  The "visible" binding
 
 		Usage:
-		data-bind="visible: @modelAttr"
+		data-bind="visible: @modelAttr, visibleOptions: { not: <truthy> }"
 
 			@modelAttr is interpreted as truthy or falsy
+
+			not is used to flip the visibility test performed
+			by this binding. The default is false.
 		
 		Purpose: The visible binding causes the associated DOM element to 
 		become hidden or visible according to the value you pass to the 
 		binding.
 	*/
-	Backbone.outback.bindingHandlers['visible'] = {
-		update: function (element, valueAccessor, allBindingsAccessor, view) {
-			var value, methodName;
-			value = valueAccessor();
-			methodName = !!value() ? 'show' : 'hide';
-			$(element)[methodName]();
+	Backbone.outback.bindingHandlers['visible'] = (function() {
+		function optionsFor(allBindingsAccessor) {
+			var config, options;
+
+			config = {
+				not: false
+			};
+					
+			options = allBindingsAccessor('visibleOptions');
+			if (options && hop(options, 'not')) {
+				config.not = !!options.not;
+			}
+			
+			return config;
 		}
-	};
+
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config, value, names, index;
+				config = optionsFor(allBindingsAccessor);
+				
+				var names = ['show', 'hide'];
+				if (config.not) names.reverse();
+				var index = !!valueAccessor()() ? 0 : 1;
+
+				$(element)[names[index]]();
+			}
+		}
+	})();
 
 	/*	The "text" binding
 
 		Usage:
-		data-bind="text: @modelAttr, escape: <truthy>"
+		data-bind="text: @modelAttr, textOptions: { escape: <truthy> }"
 
 			escape controls whether or not an HTML-escaped version of a model's
 			attribute is used.  Using escape to retrieve attributes will 
@@ -432,19 +456,32 @@
 		Purpose: The text binding causes the associated DOM element to display
 		the text value of your parameter.
 	*/
-	Backbone.outback.bindingHandlers['text'] = {
-		update: function (element, valueAccessor, allBindingsAccessor, view) {
-			var value, options, next;
+	Backbone.outback.bindingHandlers['text'] = (function() {
+		function optionsFor(valueAccessor, allBindingsAccessor) {
+			var config, options;
 
-			options = {
-				escape: allBindingsAccessor.testBoolean('escape', true)
-			};			
-
-			value = valueAccessor(options);
-			next = value();
-			$(element).text(next);
+			config = {
+				escape: true
+			};
+					
+			options = allBindingsAccessor('textOptions');
+			if (options && hop(options, 'escape')) {
+				config.escape = !!options.escape;
+			}
+			
+			return config;
 		}
-	};
+
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config, text;
+				config = optionsFor(valueAccessor, allBindingsAccessor);
+
+				text = valueAccessor({escape: config.escape})();
+				$(element).text(text);
+			}
+		}
+	})();
 
 	/*	The "html" binding
 
@@ -457,44 +494,72 @@
 		Remarks: The escape option is not honored by this binding because
 		jQuery provides its own XSS protection. 
 	*/
-	Backbone.outback.bindingHandlers['html'] = {
-		update: function (element, valueAccessor, allBindingsAccessor, view) {
-			var value, options, next;
-			value = valueAccessor(options);
-			next = value();
-			$(element).html(next);
+	Backbone.outback.bindingHandlers['html'] = (function() {
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var value;
+				value = valueAccessor()();
+				$(element).html(value);
+			}
 		}
-	};
+	})();
 
 	/*	The "css" binding
 
 		Usage:
-		data-bind="css: { class1: @modelAttr1, class2: @modelAttr2 }"
+		data-bind="css: { class1: @modelAttr1, class2: @modelAttr2, class2Options: { not: <truthy> } }"
 
 			@modelAttr is interpreted as truthy or falsy
 
 		Purpose: The css binding adds or removes one or more named CSS classes
 		to the associated DOM element.
 	*/
-	Backbone.outback.bindingHandlers['css'] = {
-		update: function (element, valueAccessor, allBindingsAccessor, view) {
-			var binding;
-			binding = allBindingsAccessor('css');
+	Backbone.outback.bindingHandlers['css'] = (function() {
+		function optionsFor(valueAccessor, allBindingsAccessor) {
+			var config, parents, binding, options, classOptions;
 
-			var parents, value, className, hasClass;
+			config = {
+				not: false
+			};
+
 			parents = valueAccessor({parents: true});
-			if (parents.length !== 1) return;
-			className = parents[0];
-			hasClass = valueAccessor()();
+			if (parents.length !== 1) {
+				return undefined;
+			}
 
-			$(element)[hasClass ? 'addClass' : 'removeClass'](className);	
+			config.className = parents[0];
+
+			binding = allBindingsAccessor('css');
+			if (hop(binding, config.className + 'Options')) {
+				options = binding[config.className + 'Options'];
+				if(options && hop(options, 'not')) {
+					config.not = !!options.not;
+				}
+			}
+			
+			return config;
 		}
-	};
+
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config;
+
+				config = optionsFor(valueAccessor, allBindingsAccessor);
+				if(_.isUndefined(config)) return;
+
+				var names = ['addClass', 'removeClass'];
+				if (config.not) names.reverse();
+				var index = !!valueAccessor()() ? 0 : 1;
+
+				$(element)[names[index]](config.className);
+			}
+		}
+	})();
 
 	/*	The "attr" binding
 
 		Usage:
-		data-bind="attr: { attr1: @modelAttr1, attr2: @modelAttr2 }, escape: <truthy>"
+		data-bind="attr: { attr1: @modelAttr1, attr2: @modelAttr2, attr2Options: { escape: <truthy> } }"
 
 			@modelAttr is interpreted as attribute values
 			
@@ -509,36 +574,57 @@
 		string, it is removed instead. Attributes may be set to null.
 
 	*/
-	Backbone.outback.bindingHandlers['attr'] = {
-		update: function (element, valueAccessor, allBindingsAccessor, view) {
-			var $el, binding, options;
-			$el = element;
-			binding = allBindingsAccessor('css');
-			
-			options = {
-				escape: allBindingsAccessor.testBoolean('escape', true)
+	Backbone.outback.bindingHandlers['attr'] = (function() {
+		function optionsFor(valueAccessor, allBindingsAccessor) {
+			var config, parents, binding, options, classOptions;
+
+			config = {
+				escape: true
 			};
 
-			var parents, value, className, hasClass;
 			parents = valueAccessor({parents: true});
-			if (parents.length !== 1) return;
-			attrName = parents[0];
-			attrValue = valueAccessor(options)();
-
-			if (_.isUndefined(attrValue) || _.isNull(attrValue)) {
-				$el.removeAttr(attrName);
-				return;
+			if (parents.length !== 1) {
+				return undefined;
 			}
 
-			attrValue = attrValue.toString();
-			if (attrValue === '') {
-				$el.removeAttr(attrName);
-				return;
-			}
+			config.attrName = parents[0];
 
-			$el.attr(attrName, attrValue);
+			binding = allBindingsAccessor('attr');
+			if (hop(binding, config.attrName + 'Options')) {
+				options = binding[config.attrName + 'Options'];
+				if(options && hop(options, 'escape')) {
+					config.escape = !!options.escape;
+				}
+			}
+			
+			return config;
 		}
-	};
+
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config, attrName, attrValue;
+
+				config = optionsFor(valueAccessor, allBindingsAccessor);
+				if(_.isUndefined(config)) return;
+
+				attrName = config.attrName;
+				attrValue = valueAccessor({escape: config.escape})();
+
+				if (_.isUndefined(attrValue) || _.isNull(attrValue)) {
+					$(element).removeAttr(attrName);
+					return;
+				}
+
+				attrValue = attrValue.toString();
+				if (attrValue === '') {
+					$(element).removeAttr(attrName);
+					return;
+				}
+
+				$(element).attr(attrName, attrValue);
+			}
+		}
+	})();
 
 	// Working with Form Fields
 	//
@@ -553,17 +639,15 @@
 		Purpose: The enable binding causes the associated DOM element to be
 		enabled only when the parameter value is true.
 	*/
-	Backbone.outback.bindingHandlers['enable'] = {
-		update: function (element, valueAccessor, allBindingsAccessor, view) {
-			var enabled;
-			enabled = !!valueAccessor()();
-			if(enabled) {
-				$(element).removeAttr('disabled');
-			} else {
-				$(element).attr('disabled', 'disabled');
+	Backbone.outback.bindingHandlers['enable'] = (function() {
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var enabled;
+				enabled = !!valueAccessor()();
+				$(element).prop('disabled', !enabled);
 			}
 		}
-	};
+	})();
 	
 	/*  The "disable" binding
 
@@ -575,22 +659,20 @@
 		Purpose: The disable binding causes the associated DOM element to be
 		disable only when the parameter value is true.
 	*/
-	Backbone.outback.bindingHandlers['disable'] = {
-		update: function (element, valueAccessor, allBindingsAccessor, view) {
-			var disabled;
-			disabled = !!valueAccessor()();
-			if(disabled) {
-				$(element).attr('disabled', 'disabled');
-			} else {
-				$(element).removeAttr('disabled');
+	Backbone.outback.bindingHandlers['disable'] = (function() {
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var disabled;
+				disabled = !!valueAccessor()();
+				$(element).prop('disabled', disabled);
 			}
 		}
-	};
+	})();
 
 	/*	The "value" binding
 
 		Usage:
-		data-bind="value: @modelAttr, valueUpdate: 'eventName', escape: <truthy>"
+		data-bind="value: @modelAttr, valueOptions { valueUpdate: 'eventName', escape: <truthy> }"
 
 			valueUpdate defaults to 'change' if not specified
 
@@ -602,39 +684,53 @@
 		with a property on your view model. This is typically useful with 
 		form elements such as <input>, <select> and <textarea>.
 	*/
-	Backbone.outback.bindingHandlers['value'] = {
-		init: function (element, valueAccessor, allBindingsAccessor, view) {
-			var options, eventName;
-			eventName = allBindingsAccessor.testString('valueUpdate', "change");
+	Backbone.outback.bindingHandlers['value'] = (function() {
+		function optionsFor(valueAccessor, allBindingsAccessor) {
+			var config, options;
 
-			options = {
-				escape: allBindingsAccessor.testBoolean('escape', true)
-			};			
+			config = {
+				eventName: 'change',
+				escape: true
+			};
 
-			$(element).on(eventName, function (e) {
-				var value, next;
-				value = valueAccessor(options);
-				next = $(this).val();
-				value(next);
-			});
-		},
-		update: function (element, valueAccessor, allBindingsAccessor, view) {
-			var value, next, options;
-			options = {
-				escape: allBindingsAccessor.testBoolean('escape', true)
-			};			
+			options = allBindingsAccessor('valueOptions');
+			if(options && hop(options, 'escape')) {
+				config.escape = !!options.escape;
+			}
 
-			value = valueAccessor(options);
-			next = value();
-			$(element).val(next);
-		},
-		remove: function (element, valueAccessor, allBindingsAccessor, view) {
-			var eventName;
-			eventName = allBindingsAccessor.testString('valueUpdate', "change");
+			if(options && hop(options, 'valueUpdate')) {
+				config.eventName = options.valueUpdate;
+			}
+			
+			return config;
+		}
 
-			$(element).off(eventName);
-		}		
-	};
+		return {		
+			init: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config;
+				config = optionsFor(valueAccessor, allBindingsAccessor);
+
+				$(element).on(config.eventName, function (e) {
+					var value;
+					value = $(element).val();
+					valueAccessor()(value);
+				});
+			},
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config, value;
+				config = optionsFor(valueAccessor, allBindingsAccessor);
+
+				value = valueAccessor({escape: config.escape})();
+				$(element).val(value);
+			},
+			remove: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config;
+				config = optionsFor(valueAccessor, allBindingsAccessor);
+
+				$(element).off(config.eventName);	
+			}
+		}	
+	})();
 
 	/*	The "hasfocus" binding
 

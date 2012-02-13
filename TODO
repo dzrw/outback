@@ -1,17 +1,6 @@
-- add support for metadata
-
-	data-bind="attr: { href: @url }, meta: { attr: href: { escape: false } }"
-
-	meta = valueAccessor({source: 'meta'});
-
-- add support for options
-
-	data-bind="value: @firstName, valueOptions: { valueUpdate: 'keypress' }"
-
-	options = valueAccessor({source: 'options'});
+- build a todos app
 
 - add bindings (options, selectedOptions, uniqueName?)
-
 
 - binding to the view instead of the model 
 
@@ -25,9 +14,12 @@
 	data-bind="visible: @isSelected, visibleOptions: { dataSource: '//' }"
 	data-bind="visible: @isSelected, visibleOptions: { dataSource: '//model' }" (default)
 
-	I think I'll start with option 1.  Backbone Views already raise events so there shouldn't be a need to bind through like option 2 implies.
+	---or---
+
+	option 3: use a different attribute
+
+	data-bind-view="visible: @isSelected"
 
 
 - dependency cycle detection / breakage
 
-- build a todos app
