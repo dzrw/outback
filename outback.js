@@ -97,6 +97,7 @@
 			modelAttrName: modelAttrName,
 			valueAccessor: makeValueAccessorBuilder(model),
 			modelEvents: {
+				eventName: false,		// TODO: Defaults to "change:modelAttrName"
 				subscribe: subscribe,
 				unsubscribe: unsubscribe
 			}
@@ -135,33 +136,33 @@
 		};    
 	}
 
-	function parseDataBindAttrBindingDecls (view, model) {
+	function parseDataBindAttrBindingDecls (databindAttr, view, model) {
 		var bindingDecls, selector;
 
 		bindingDecls = [];
-		selector = "*[data-bind]";
+		selector = "*["+databindAttr+"]";
 
 		view.$(selector).each(function () { 
 			var element, bindingExpr, directives;
 
 			element = view.$(this);
-			bindingExpr = element.attr('data-bind');
+			bindingExpr = element.attr(databindAttr);
 			directives = rj.parse(bindingExpr, makeBindingDeclReviver(model));
 
 			bindingDecls.push({
 				element: element,
-				directives: directives
+				directives: directives,
+				dataSource: model
 			});
 		});
 
 		return bindingDecls;
 	}
 
-	function parseUnobtrusiveBindingDecls (view, model) {
-		var bindingDecls, root, viewAttr;
+	function parseUnobtrusiveBindingDecls (viewAttr, view, model) {
+		var bindingDecls, root;
 
 		bindingDecls = [];
-		viewAttr = 'dataBindings';	// TODO: hard-coded view attribute should be configurable
 
 		_.each(view[viewAttr], function(value, selector) {
 			if(!hop(view[viewAttr], selector)) return;
@@ -174,7 +175,8 @@
 
 				bindingDecls.push({
 					element: element,
-					directives: directives
+					directives: directives,
+					dataSource: model
 				});
 			}
 		});
@@ -254,7 +256,7 @@
 	}
 
 	function applyBinding (view, binding) {
-		var binders, binderArgs, modelEventName, updateFn;
+		var binders, binderArgs, eventName, updateFn;
 
 		binders = {
 			modelSubs: [],
@@ -264,25 +266,27 @@
 			modelUnsubs: []
 		};
 
-		modelEventName = typeof binding.modelEventName === 'string' ? binding.modelEventName : false;
+		eventName = binding.modelEvents.eventName;
 		binderArgs = [binding.element, binding.valueAccessor, binding.allBindingsAccessor, view];
 
-		function nop() {}
+		if (!hop(binding.handler, 'update')) {
+			return undefined;
+		}
 
-		updateFn = hop(binding.handler, 'update') ? binding.handler.update : nop;
+		updateFn = binding.handler.update;
 
 		binders.updates.push(function() { 
 			updateFn.apply(view, binderArgs); 
 		});
 
 		binders.modelSubs.push(function() {
-			binding.modelEvents.subscribe(modelEventName, function(m, val) {
+			binding.modelEvents.subscribe(eventName, function(m, val) {
 				updateFn.apply(view, binderArgs);	
 			});
 		});
 
 		binders.modelUnsubs.push(function () {
-			binding.modelEvents.unsubscribe(modelEventName);
+			binding.modelEvents.unsubscribe(eventName);
 		})
 
 		if (hop(binding.handler, 'init')) {
@@ -304,8 +308,8 @@
 		this.modelAttrName = modelAttrName;
 	};
 
-	var OutbackBinder = function (view, model, bindingHandlers) {
-		var allBinders;
+	var OutbackBinder = function (view, bindingHandlers) {
+		var bindingContexts, allBinders;
 
 		allBinders = {
 			modelSubs: [],
@@ -314,17 +318,38 @@
 			removes: [],
 			modelUnsubs: []
 		};
+		
+		bindingContexts = {
+			model: {
+				dataSource: view.model,
+				databindAttr: 'data-bind',
+				unobtrusiveAttr: 'modelBindings'
+			},
+			viewModel: {
+				dataSource: view.viewModel,
+				databindAttr: 'data-bind-view',
+				unobtrusiveAttr: 'viewModelBindings'
+			}
+		};
+
+		function arrayConcatBindingContext(bindingDecls, context) {
+			if(context.dataSource) {
+				arrayConcat(bindingDecls, parseDataBindAttrBindingDecls(context.databindAttr, view, context.dataSource));
+				arrayConcat(bindingDecls, parseUnobtrusiveBindingDecls(context.unobtrusiveAttr, view, context.dataSource));
+			}
+		}
 
 		this.bind = function () {
 			var bindingDecls, bindings, summary;
 
 			summary = {
+				executableBindingsSkipped: 0,
 				executableBindingsInstalled: 0
 			};
 
 			bindingDecls = [];
-			arrayConcat(bindingDecls, parseDataBindAttrBindingDecls(view, model));
-			arrayConcat(bindingDecls, parseUnobtrusiveBindingDecls(view, model));
+			arrayConcatBindingContext(bindingDecls, bindingContexts.model);
+			arrayConcatBindingContext(bindingDecls, bindingContexts.viewModel);
 
 			bindings = [];
 			_.each(bindingDecls, function (bindingDecl) {
@@ -339,6 +364,10 @@
 
 			_.each(bindings, function (binding) {
 				binders = applyBinding(view, binding);
+				if (_.isUndefined(binders)) {
+					summary.executableBindingsSkipped++;
+					return;
+				}
 
 				arrayConcat(allBinders.modelSubs, binders.modelSubs);
 				arrayConcat(allBinders.inits, binders.inits);
@@ -354,10 +383,6 @@
 			eachfn(allBinders.inits);
 			eachfn(allBinders.updates);
 			eachfn(allBinders.modelSubs);
-
-			// Fire a single model change event to sync the DOM.
-
-			//model.trigger('change');
 
 			if (typeof view.bindingSummary === 'function') {
 				view.bindingSummary(summary);
@@ -376,7 +401,7 @@
 	Backbone.outback = {
 		version: "0.1.0",
 		bind: function(view){
-			view.__outback_binder = new OutbackBinder(view, view.model, Backbone.outback.bindingHandlers);	// TODO: Support for Collections
+			view.__outback_binder = new OutbackBinder(view, Backbone.outback.bindingHandlers);
 			view.__outback_binder.bind();
 		},
 

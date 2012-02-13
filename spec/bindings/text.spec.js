@@ -33,7 +33,7 @@ describe('the text binding', function() {
 			this.view = new FixtureView({model: this.model});
 			_.extend(this.view, {
 				innerHtml: "<p></p>",
-				dataBindings: {
+				modelBindings: {
 					'#anchor p': {
 						text: Backbone.outback.modelRef('content')
 					}
@@ -59,7 +59,7 @@ describe('the text binding', function() {
 		});
 
 		it('should allow you to shoot yourself in the foot', function () {
-			this.view.dataBindings['#anchor p'].textOptions = { escape: false };
+			this.view.modelBindings['#anchor p'].textOptions = { escape: false };
 			expect(this.view).toHaveAnElementWithContent('#anchor p', xssPayload);
 		});
 

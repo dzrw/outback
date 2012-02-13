@@ -5,7 +5,7 @@ describe('the visible binding', function () {
 		this.model = new AModel({isVisible: true});
 		this.view = new FixtureView({model: this.model});
 		_.extend(this.view, {
-			dataBindings: {
+			modelBindings: {
 				'#anchor': {
 					visible: Backbone.outback.modelRef('isVisible')
 				}	
@@ -31,7 +31,7 @@ describe('the visible binding', function () {
 		this.model = new AModel({isVisible: true});
 		this.view = new FixtureView({model: this.model});
 		_.extend(this.view, {
-			dataBindings: {
+			modelBindings: {
 				'#anchor': {
 					visible: Backbone.outback.modelRef('isVisible'),
 					visibleOptions: { not: true }

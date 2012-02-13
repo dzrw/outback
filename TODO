@@ -2,24 +2,5 @@
 
 - add bindings (options, selectedOptions, uniqueName?)
 
-- binding to the view instead of the model 
-
-	option 1: view/model paradigm
-	data-bind="visible: @isSelected, visibleOptions: { durable: false }"
-
-	---or---
-
-	option 2: nested views paradigm
-
-	data-bind="visible: @isSelected, visibleOptions: { dataSource: '//' }"
-	data-bind="visible: @isSelected, visibleOptions: { dataSource: '//model' }" (default)
-
-	---or---
-
-	option 3: use a different attribute
-
-	data-bind-view="visible: @isSelected"
-
-
 - dependency cycle detection / breakage
 

@@ -6,8 +6,16 @@ Setup up your Backbone.View like so:
 
 ```CoffeeScript
 
+class TodoModel extends Backbone.Model
+	defaults:
+		todo: 'Learn outback.js'
+
 class TodoView extends Backbone.View
 	model: TodoModel
+
+	# setup a viewModel for transient state (optional)
+	viewModel: new Backbone.Model
+		isEditing: false
 
 	@render: ->
 		Backbone.outback.bind @
@@ -21,22 +29,36 @@ Sprinkle data-bind attributes into your templates:
 
 ```HTML
 
-<div id="edit">
-	<input type="text" class="todo-input" data-bind="value: @todo">
+<!-- adds the CSS class 'editing' to the div when the 
+     viewModel's isEditing attribute is true, removes it
+     when it isn't -->
+
+<div data-bind-view="css: { editing: @isEditing }">
+
+	<!-- the input's value is two-way bound to the model's todo
+		 attribute, and the focus state of the control is two-way 
+		 bound to the viewModel's isEditing attribute -->
+
+	<input 	type="text" 
+			class="todo-input" 
+			data-bind="value: @todo" 
+			data-bind-view="hasfocus: @isEditing">
+
 </div>
 
 ```
 
 ## Can I configure the bindings in code instead?
 
-Yes, outback bindings can be setup in either code or markup.
+Yes, outback bindings can be setup in either code or markup; feel free to mix and match.
 
 ```CoffeeScript
 
 class TodoView extends Backbone.View
 	model: TodoModel
 
-	dataBindings:
+	# modelBindings (viewModelBindings) are bound to your model (viewModel)
+	modelBindings:
 		'#edit .todo-input': 
 			value: Backbone.outback.modelRef 'todo'
 

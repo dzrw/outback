@@ -43,7 +43,7 @@ describe('the value binding', function() {
 			this.view = new FixtureView({model: this.model});
 			_.extend(this.view, {
 				innerHtml: "<input type='text'>",
-				dataBindings: {
+				modelBindings: {
 					'#anchor input': {
 						value: Backbone.outback.modelRef('content')
 					}
@@ -69,7 +69,7 @@ describe('the value binding', function() {
 		});
 
 		it('should allow you to shoot yourself in the foot', function () {
-			this.view.dataBindings['#anchor input'].valueOptions = { escape: false };
+			this.view.modelBindings['#anchor input'].valueOptions = { escape: false };
 			expect(this.view).toHaveAnElementWithContent('#anchor input', xssPayload);
 		});
 

@@ -69,6 +69,7 @@ describe('outback.js declarative bindings for backbone.js', function() {
 			args = this.view.bindingSummary.mostRecentCall.args;
 			expect(args).toBeDefined();
 			expect(args.length).toBe(1);
+			expect(args[0].executableBindingsSkipped).toBe(0);
 			expect(args[0].executableBindingsInstalled).toBe(1);
 		});
 
@@ -89,6 +90,7 @@ describe('outback.js declarative bindings for backbone.js', function() {
 			args = this.view.bindingSummary.mostRecentCall.args;
 			expect(args).toBeDefined();
 			expect(args.length).toBe(1);
+			expect(args[0].executableBindingsSkipped).toBe(0);
 			expect(args[0].executableBindingsInstalled).toBe(0);
 
 			this.view.remove();
@@ -102,7 +104,7 @@ describe('outback.js declarative bindings for backbone.js', function() {
 			this.model = new AModel({ isVisible: false });
 			this.view = new TypicalView({model: this.model});
 			_.extend(this.view, {
-				dataBindings: {
+				modelBindings: {
 					'#anchor': {
 						nop: Backbone.outback.modelRef('isVisible')
 					}	
@@ -279,4 +281,64 @@ describe('outback.js declarative bindings for backbone.js', function() {
 		});
 	});
 
+	describe("supports multiple bindings contexts", function() {
+
+		beforeEach(function(){
+			this.model = new Backbone.Model({x: false});
+			this.viewModel = new Backbone.Model({y: 'value from viewmodel'});
+
+			this.view = new FixtureView({model: this.model});
+			
+			_.extend(this.view, {
+				viewModel: this.viewModel,
+				innerHtml: "<input type='text' data-bind='css: { xclass: @x }' data-bind-view='value: @y'>"
+			});
+		});
+		
+		it('should initialize into a stable state', function() {
+			var args, bindings;
+
+			this.view.bindingSummary = function() {};
+
+			spyOn(this.view, 'bindingSummary');
+
+			this.view.render();
+			this.el = this.view.$('#anchor input');
+
+			args = this.view.bindingSummary.mostRecentCall.args;
+			expect(args[0].executableBindingsSkipped).toBe(0);
+			expect(args[0].executableBindingsInstalled).toBe(2);
+
+			expect(this.model.get('x')).toBeFalsy();
+			expect(this.el.hasClass('xclass')).toBeFalsy();
+
+			expect(this.viewModel.get('y')).toBe('value from viewmodel');
+			expect(this.el.val()).toBe('value from viewmodel');
+
+			this.view.remove();
+		});
+			
+		it("should correctly handle the optional viewModel binding context", function() {
+			spyOn(Backbone.outback.bindingHandlers.value, 'update').andCallThrough();
+
+			this.view.render();
+			this.el = this.view.$('#anchor input');
+
+			expect(Backbone.outback.bindingHandlers.value.update.callCount).toBe(1);
+
+			this.viewModel.set({y: 'hello, world'});
+
+			expect(Backbone.outback.bindingHandlers.value.update.callCount).toBe(2);
+
+			expect(this.el.val()).toBe('hello, world');
+
+			this.el.val('binding contexts rock');
+			this.el.trigger('change');
+
+			expect(this.viewModel.get("y")).toBe('binding contexts rock');
+
+			this.view.remove();
+		});
+
+	});
 });

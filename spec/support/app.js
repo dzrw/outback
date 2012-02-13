@@ -18,7 +18,7 @@ TypicalView = Backbone.View.extend({
 });
 
 UnobtrusiveView = TypicalView.extend({
-	dataBindings: {
+	modelBindings: {
 		'#anchor': { 
 			visible: Backbone.outback.modelRef('isVisible') 
 		}
