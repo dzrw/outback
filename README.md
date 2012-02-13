@@ -99,12 +99,16 @@ Backbone.outback.bindingHandlers['custom'] = ->
 
 ```
 
+## A little more documentation would be helpful...
+
+Agreed, but for now, refer to the [tests](https://github.com/politician/outback/tree/master/spec).
+
 ## Can I include arbitrary JavaScript expressions in my data-binds?
 
 No. 
 
 1. `data-bind` attributes are handled by [rj](https://github.com/politician/relaxed-json-parser) which recognizes a small superset of JSON.  Specifically, the `@name` notation is parsed using the rules for JavaScript identifiers.
-2. Personally, I don't think it's a good idea to put logic in markup.
+2. Personally, I don't think it's a good idea to put that kind of logic in markup.
 
 ## XSS
 
@@ -112,7 +116,7 @@ The `text`, `value`, and `attr` bindings use `model.escape` instead of `model.ge
 
 ```HTML
 <!-- prevent outback from mangling the url -->
-<a data-bind="attr: { href: @url }, escape: false"></a>
+<a data-bind="attr: { href: @url, hrefOptions: { escape: false } }"></a>
 ```
 
 License
