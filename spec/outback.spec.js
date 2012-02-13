@@ -223,6 +223,29 @@ describe('outback.js declarative bindings for backbone.js', function() {
 
 				expect(Backbone.outback.bindingHandlers.nop.update.callCount).toBe(1);				
 			});
+
+			it('should be possible to refer to the root of the view using the unobtrusive style', function() {
+				var view, model;
+				model = new AModel({ isActive: true });
+				view = new TypicalView({model: model});
+				_.extend(view, {
+					modelBindings: {
+						'': {
+							css: { 'ui-active': Backbone.outback.modelRef('isActive') }
+						}	
+					}
+				});
+
+				view.render();
+
+				expect(view.$el.hasClass('ui-active')).toBeTruthy();
+
+				model.set({isActive: false});
+
+				expect(view.$el.hasClass('ui-active')).toBeFalsy();
+
+				view.remove();
+			});
 		});
 	});
 
@@ -281,7 +304,7 @@ describe('outback.js declarative bindings for backbone.js', function() {
 		});
 	});
 
-	describe("supports multiple bindings contexts", function() {
+	describe("supports multiple binding contexts", function() {
 
 		beforeEach(function(){
 			this.model = new Backbone.Model({x: false});

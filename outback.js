@@ -168,7 +168,7 @@
 			if(!hop(view[viewAttr], selector)) return;
 
 			var element, directives;
-			element = view.$(selector);
+			element = selector === '' ? view.$el : view.$(selector);
 
 			if(element.size() !== 0) {
 				directives = rj.revive(value, makeUnobtrusiveBindingDeclReviver(model));
