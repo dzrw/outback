@@ -123,7 +123,7 @@ Backbone.outback.bindingHandlers['custom'] = ->
 
 ## A little more documentation would be helpful...
 
-Agreed, but for now, refer to the [tests](https://github.com/politician/outback/tree/master/spec).
+Agreed, but for now, refer to the [examples](https://github.com/politician/outback/tree/master/examples) and [specs](https://github.com/politician/outback/tree/master/spec).
 
 ## Can I include arbitrary JavaScript expressions in my data-binds?
 
