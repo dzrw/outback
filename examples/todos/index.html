@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"/>
+  <title>Example 1</title>
+  
+  <link href="todos.css" media="all" rel="stylesheet" type="text/css"/>
+
+  <!-- include source files here... -->
+  <script type="text/javascript" src="../../lib/jquery.js"></script>
+  <script type="text/javascript" src="../../lib/underscore.js"></script>
+  <script type="text/javascript" src="../../lib/backbone.js"></script>
+  <script type="text/javascript" src="../lib/backbone.localStorage.js"></script>
+  <script type="text/javascript" src="../../lib/rj.min.js"></script>
+  <script type="text/javascript" src="../../outback.js"></script>
+
+  <script type="text/javascript" src="../lib/coffee-script.js"></script>
+  <script type="text/coffeescript" src="todos.coffee"></script>
+
+</head>
+<body>
+
+    <!-- Todo App Skeleton -->
+
+    <div id="todoapp">
+
+      <div class="title">
+        <h1>Todos</h1>
+      </div>
+
+      <div class="content">
+
+        <div id="create-todo">
+          <input id="new-todo" placeholder="What needs to be done?" type="text" />
+          <span class="ui-tooltip-top" style="display:none;">Press Enter to save this task</span>
+        </div>
+
+        <!-- Each <li> is a TodoView -->
+        <div id="todos">
+          <ul id="todo-list"></ul>
+        </div>
+
+        <!-- Stats -->
+        <div id="todo-stats"></div>
+
+      </div>
+
+    </div>
+
+    <ul id="instructions">
+      <li>Double-click to edit a todo.</li>
+      <!--<li><a href="../../docs/todos.html">View the annotated source.</a></li>-->
+    </ul>
+
+    <div id="credits">
+      Created by
+      <br />
+      <a href="http://jgn.me/">J&eacute;r&ocirc;me Gravel-Niquet</a>
+    </div>
+
+    <script type="text/template" id="stats-template">
+      <% if (total) { %>
+        <span class="todo-count">
+          <span class="number"><%= remaining %></span>
+          <span class="word"><%= remaining == 1 ? 'item' : 'items' %></span> left.
+        </span>
+      <% } %>
+      <% if (done) { %>
+        <span class="todo-clear">
+          <a href="#">
+            Clear <span class="number-done"><%= done %></span>
+            completed <span class="word-done"><%= done == 1 ? 'item' : 'items' %></span>
+          </a>
+        </span>
+      <% } %>
+    </script>
+    
+</body>
+</html>

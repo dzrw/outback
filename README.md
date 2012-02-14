@@ -2,29 +2,6 @@
 
 ## tl;dr
 
-Setup up your Backbone.View like so:
-
-```CoffeeScript
-
-class TodoModel extends Backbone.Model
-	defaults:
-		todo: 'Learn outback.js'
-
-class TodoView extends Backbone.View
-	model: TodoModel
-
-	# setup a viewModel for transient state (optional)
-	viewModel: new Backbone.Model
-		isEditing: false
-
-	@render: ->
-		Backbone.outback.bind @
-
-	@remove: ->
-		Backbone.outback.unbind @
-
-```
-
 Sprinkle data-bind attributes into your templates:
 
 ```HTML
@@ -45,6 +22,29 @@ Sprinkle data-bind attributes into your templates:
 			data-bind-view="hasfocus: @isEditing">
 
 </div>
+
+```
+
+Then setup up your view:
+
+```CoffeeScript
+
+class TodoModel extends Backbone.Model
+	defaults:
+		todo: 'Learn outback.js'
+
+class TodoView extends Backbone.View
+	model: TodoModel
+
+	# use a viewModel for transient state (optional)
+	viewModel: new Backbone.Model
+		isEditing: false
+
+	@render: ->
+		Backbone.outback.bind @
+
+	@remove: ->
+		Backbone.outback.unbind @
 
 ```
 
@@ -121,10 +121,6 @@ Backbone.outback.bindingHandlers['custom'] = ->
 
 ```
 
-## A little more documentation would be helpful...
-
-Agreed, but for now, refer to the [examples](https://github.com/politician/outback/tree/master/examples) and [specs](https://github.com/politician/outback/tree/master/spec).
-
 ## Can I include arbitrary JavaScript expressions in my data-binds?
 
 No. 
@@ -132,7 +128,7 @@ No.
 1. `data-bind` attributes are handled by [rj](https://github.com/politician/relaxed-json-parser) which recognizes a small superset of JSON.  Specifically, the `@name` notation is parsed using the rules for JavaScript identifiers.
 2. Personally, I don't think it's a good idea to put that kind of logic in markup.
 
-## XSS
+## XSS?
 
 The `text`, `value`, and `attr` bindings use `model.escape` instead of `model.get` to help defend against XSS attacks.  This feature may be turned off by including `escape: false` in the binding configuration.  The `html` binding uses jQuery's natural mechanism and is not overridable.
 
@@ -140,6 +136,18 @@ The `text`, `value`, and `attr` bindings use `model.escape` instead of `model.ge
 <!-- prevent outback from mangling the url -->
 <a data-bind="attr: { href: @url, hrefOptions: { escape: false } }"></a>
 ```
+
+## Todos?
+
+[In progress](https://github.com/politician/outback/tree/master/examples/todos)
+
+## A little more documentation would be helpful...
+
+Working on it, but for now refer to the [examples][exmpl], [specs][specs], and [source][src].
+
+[exmpl]: https://github.com/politician/outback/tree/master/examples
+[specs]: https://github.com/politician/outback/tree/master/spec
+[src]: https://github.com/politician/outback/blob/master/outback.js
 
 License
 ---
