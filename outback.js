@@ -256,7 +256,6 @@
 			modelUnsubs: []
 		};
 
-		eventName = binding.modelEvents.eventName;
 		binderArgs = [binding.element, binding.valueAccessor, binding.allBindingsAccessor, view];
 
 		if (!hop(binding.handler, 'update')) {
@@ -270,13 +269,13 @@
 		});
 
 		binders.modelSubs.push(function() {
-			binding.modelEvents.subscribe(eventName, function(m, val) {
+			binding.modelEvents.subscribe(binding.modelEvents.eventName, function(m, val) {
 				updateFn.apply(view, binderArgs);	
 			});
 		});
 
 		binders.modelUnsubs.push(function () {
-			binding.modelEvents.unsubscribe(eventName);
+			binding.modelEvents.unsubscribe(binding.modelEvents.eventName);
 		})
 
 		if (hop(binding.handler, 'init')) {
@@ -408,12 +407,16 @@
 		bindingHandlers: {}		
 	};
 
+	Backbone.View.prototype.modelref = function(name) {
+		return Backbone.outback.modelRef(name);
+	}
+
 	// ===================================
 	// STANDARD BINDING HANDLERS
 	// ===================================
 
 	// Controlling Text and Appearance
-	//
+	// ===================================
 
 	/*  The "visible" binding
 
@@ -642,7 +645,7 @@
 	})();
 
 	// Working with Form Fields
-	//
+	// ===================================
 	
 	/*  The "enable" binding
 
@@ -857,5 +860,73 @@
 			}		
 		};
 	})();
+
+
+	// Working with Collections
+	// ===============================
+
+		
+	// Other Miscellaneous Bindings
+	// ===============================
+
+
+	/*	The "plural" binding
+
+		Usage:
+		data-bind="plural: @modelAttr, pluralOptions: { word: 'singularForm', lang: 'enUS' } }"
+
+			if count is not at number, then it is interpreted as a truthy value
+			where true is 1 and false is 0
+
+			word should be the singular form of the word. The default is 'item'
+
+			lang is the ISO language code for the word. This parameter is currently ignored.
+
+		Purpose: The plural binding causes the associated DOM element to display
+		the singular form of the word specified by the word parameter if the count
+		is 1; otherwise, the plural form is displayed.
+	*/
+	Backbone.outback.bindingHandlers['plural'] = (function() {
+		function optionsFor(valueAccessor, allBindingsAccessor) {
+			var config, options;
+
+			config = {
+				word: 'item',
+				lang: 'enUS'
+			};
+					
+			options = allBindingsAccessor('pluralOptions');
+			if (options && hop(options, 'word')) {
+				config.word = ''+options.word;
+			}
+			
+			return config;
+		}
+
+		function pluralize(count, word, lang)
+		{
+			if (count === 1) {
+				return word;
+			} else {
+				return '' + word + 's'; // TODO: Get the real algorithm.
+			}
+		}
+
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config, count, text;
+				config = optionsFor(valueAccessor, allBindingsAccessor);
+
+				count = valueAccessor()();
+				if (!_.isNumber(count)) {
+					count = !!count ? 1 : 0
+				}
+
+				text = pluralize(count, config.word, config.lang);
+
+				$(element).text(text);
+			}
+		}
+	})();	
 
 }));
