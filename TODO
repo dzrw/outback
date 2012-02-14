@@ -1,6 +1,7 @@
-- build a todos app
+- build more simple examples
+
+- improve todos app
 
 - add bindings (options, selectedOptions, uniqueName?)
 
 - dependency cycle detection / breakage
-
