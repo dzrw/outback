@@ -140,7 +140,7 @@
 		var bindingDecls, selector;
 
 		bindingDecls = [];
-		selector = "*["+databindAttr+"]";
+		selector = "["+databindAttr+"]";
 
 		view.$(selector).each(function () { 
 			var element, bindingExpr, directives;
