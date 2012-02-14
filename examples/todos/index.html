@@ -35,16 +35,13 @@
           <span class="ui-tooltip-top" style="display:none;">Press Enter to save this task</span>
         </div>
 
-        <!-- Each <li> is a TodoView -->
         <div id="todos">
           <ul id="todo-list"></ul>
         </div>
 
-        <!-- Stats -->
         <div id="todo-stats"></div>
 
       </div>
-
     </div>
 
     <ul id="instructions">
@@ -58,22 +55,5 @@
       <a href="http://jgn.me/">J&eacute;r&ocirc;me Gravel-Niquet</a>
     </div>
 
-    <script type="text/template" id="stats-template">
-      <% if (total) { %>
-        <span class="todo-count">
-          <span class="number"><%= remaining %></span>
-          <span class="word"><%= remaining == 1 ? 'item' : 'items' %></span> left.
-        </span>
-      <% } %>
-      <% if (done) { %>
-        <span class="todo-clear">
-          <a href="#">
-            Clear <span class="number-done"><%= done %></span>
-            completed <span class="word-done"><%= done == 1 ? 'item' : 'items' %></span>
-          </a>
-        </span>
-      <% } %>
-    </script>
-    
 </body>
 </html>
