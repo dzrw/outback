@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"/>
+  <title>Example 1</title>
+  
+  <!-- include source files here... -->
+  <script type="text/javascript" src="../lib/jquery.js"></script>
+  <script type="text/javascript" src="../lib/underscore.js"></script>
+  <script type="text/javascript" src="../lib/backbone.js"></script>
+  <script type="text/javascript" src="../lib/rj.min.js"></script>
+  <script type="text/javascript" src="../outback.js"></script>
+
+</head>
+<body id="fixture">
+
+  <h2>A trivial example</h2>
+
+  <p>This example demonstrates basic interactivity using the <i>enable</i>, <i>disable</i>, and <i>visible</i> bindings.</p>
+
+   <button id="show" data-bind="disable: @shouldShowMessage">Reveal Text</button>
+   <button id="reset" data-bind="enable: @shouldShowMessage">Reset</button>
+
+   <div data-bind="visible: @shouldShowMessage">
+      <p>You will see this message only when "shouldShowMessage" holds a true value.</p>
+   </div>
+
+   <script type="text/javascript">
+      var MainView = Backbone.View.extend({
+         el: '#fixture',
+
+         events: {
+           'click #show': 'showMessage',
+           'click #reset': 'hideMessage'
+         },
+
+         initialize: function() {
+            this.render();
+         },
+
+         render: function() {
+            Backbone.outback.bind(this);
+         },
+
+         remove: function() {
+            Backbone.outback.unbind(this);
+         },
+
+         showMessage: function() {
+            this.model.set("shouldShowMessage", true);
+         },
+
+         hideMessage: function() {
+            this.model.set("shouldShowMessage", false);
+         },
+
+         bindingSummary: function(summary) {
+            console.log(summary);
+         }
+      });
+
+      $(function () {
+         window.app = new MainView({
+            model: new Backbone.Model({shouldShowMessage: false})
+         });
+      });
+   </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"/>
+  <title>Example 2</title>
+  
+  <!-- include source files here... -->
+  <script type="text/javascript" src="../lib/jquery.js"></script>
+  <script type="text/javascript" src="../lib/underscore.js"></script>
+  <script type="text/javascript" src="../lib/backbone.js"></script>
+  <script type="text/javascript" src="lib/backbone.localStorage.js"></script>
+  <script type="text/javascript" src="../lib/rj.min.js"></script>
+  <script type="text/javascript" src="../outback.js"></script>
+
+</head>
+<body id="fixture">
+
+   <h2>The "Hello, World" Example</h2>
+
+   <p>This example uses the <i>text</i> and <i>value</i> bindings to keep a span updated with the values of the form fields.  The span is bound to a function on the view's model which is comparable to a Knockout computed observable (albeit, less magical).<p>
+
+   <p>First name: <input data-bind="value: @firstName" /></p>
+   <p>Last name: <input data-bind="value: @lastName" /></p>
+   <h3>Hello, <span data-bind="text: @fullName"> </span>!</h3>
+   
+   <button id="exploit">Inject &lt;script&gt;</button>
+
+
+   <script type="text/javascript">
+
+// MainView is the ... main view.
+
+      var MainView = Backbone.View.extend({
+         el: '#fixture',
+
+// Listen to the DOM.
+
+         events: {
+            'click #exploit': 'injectPayload',
+         },
+
+         initialize: function() {
+            this.render();
+         },
+
+         render: function() {
+
+// Tell outback to get to work.
+ 
+            Backbone.outback.bind(this);
+         },
+
+         remove: function() {
+
+// Tell outback to clean up event handlers and whatnot.
+
+            Backbone.outback.unbind(this);
+         },
+
+         injectPayload: function() {
+
+// This function simulates an XSS attack on your page.  Malicious ads do stuff
+// like this.
+
+            this.model.set("firstName", "<script>alert('xss')<" + "/script>");
+         },
+
+         bindingSummary: function(summary) {
+            if (!console || typeof console.log !== 'function') return;
+
+// This is an optional hook which outback will call when it's finished binding
+// the view.  It's useful for debugging.  
+
+            console.log(summary);
+         }
+      });
+
+
+// MainModel holds the details of our form.
+
+      var MainModel = Backbone.Model.extend({
+         defaults: {
+            firstName: 'Planet', 
+            lastName: 'Earth'
+         },
+
+         initialize: function() {
+
+// Setup the fullName dependency on initialize.
+
+            this.on('change:firstName change:lastName', this.fullName, this);
+
+            this.fullName();
+         },
+
+         fullName: function() {
+
+// This function computes the fullName attribute when its dependencies change.
+// It's not as magical as Knockout computed observables, but it gets the job
+// done.
+
+            var value = this.get("firstName") + " " + this.get("lastName");
+            this.set("fullName", value);
+         },
+
+      });
+
+// ... and lift off!
+
+      $(function () {
+         window.app = new MainView({
+            model: new MainModel()
+         });
+      });
+   </script>
+</body>
+</html>
