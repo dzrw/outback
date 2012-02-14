@@ -218,16 +218,6 @@
 			}
 		};
 
-		allBindingsAccessor.testString = function(key, defaultValue) {
-			var value = allBindingsAccessor(key);
-			return _.isUndefined(value) ? defaultValue : ''+value;
-		}
-
-		allBindingsAccessor.testBoolean = function(key, defaultValue) {
-			var value = allBindingsAccessor(key);
-			return _.isUndefined(value) ? !!defaultValue : !!value;
-		};
-		
 		_.each(bindingDecl.directives, function(binding, key) {
 			var pile, executableBinding;
 
