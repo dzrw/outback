@@ -887,10 +887,12 @@
 		}
 
 		function domWrite($el, actual) {
-			var checked;
+			var checked, value, comparand;
 			switch($el.attr('type')) {
 				case 'radio':
-					checked = $el.val() === actual
+					value = $el.val(); 
+					comparand = _.isString(value) ? '' + actual : actual;
+					checked = value === comparand
 					$el.prop('checked', checked);
 					break;
 
@@ -987,6 +989,6 @@
 				$(element).text(text);
 			}
 		}
-	})();	
+	})();
 
 }));
