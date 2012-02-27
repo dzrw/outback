@@ -991,4 +991,95 @@
 		}
 	})();
 
+
+	/*	The "currency" binding
+
+		Usage:
+		data-bind="currency: @modelAttr, currencyOptions: { format: <formatspec> }"
+
+			formatspec is a string which describes how a monetary value must be
+			rendered. This string must match the RegExp,
+
+			    /^([^\d]*)9([^\d]?)999([^\d])99([^\d]*)$/
+
+			where the capture groups are interpreted as follows:
+
+				$1 is an optional prefix; typically a currency sign ($)
+				$2 is an optional thousands separator
+				$3 is the decimal separator
+				$4 is an optional suffix; typically a currency abbreviation (USD)
+
+			The default format specifier is '$9,999.99'.
+
+			negativeClass is the name of a CSS class to add to the element 
+			when the value is less than 0. The default is 'currency-negative'.
+
+		Purpose: The currency binding causes the associated DOM element to 
+		display the text value of the bound symbol formatted as a currency.
+	*/
+	Backbone.outback.bindingHandlers['currency'] = (function() {
+		function optionsFor(valueAccessor, allBindingsAccessor) {
+			var config, options;
+
+			config = {
+				format: [ '$', ',', '.', '' ]
+			};
+					
+			options = allBindingsAccessor('currencyOptions');
+			if (options && hop(options, 'format')) {
+				config.format = parseFormatSpec(options.format) || config.format;
+			}
+
+			return config;
+		}
+
+		function parseFormatSpec(formatSpec) {
+			var re, m;
+			re = /^([^\d]*)9([^\d]?)999([^\d])99([^\d]*)$/;
+			m = re.exec(formatSpec);
+			if (_.isArray(m)) {
+				m.shift();
+				return m;
+			}
+		}
+
+		// http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript
+		// with modifications to specify radix in parseInt, to wrap negative values in parens, and 
+		// to display a currency symbol if specified
+		function formatMoney (c, prefix, t, d, suffix) {
+			var n = this, 
+				c = isNaN(c = Math.abs(c)) ? 2 : c, 
+				d = d == undefined ? "," : d, 
+				t = t == undefined ? "." : t, 
+				s1 = n < 0 ? "(" : "",
+				s2 = n < 0 ? ")" : "",
+				prefix = prefix == undefined ? "" : prefix,
+				suffix = suffix == undefined ? "" : suffix,
+				i = parseInt(n = Math.abs(+n || 0).toFixed(c), 10) + "", 
+				j = (j = i.length) > 3 ? j % 3 : 0;
+
+		   return s1 
+		        + prefix 
+		        + (j ? i.substr(0, j) + t : "") 
+		        + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) 
+		        + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "") 
+		        + suffix 
+		        + s2;
+		};
+
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config, value;
+				config = optionsFor(valueAccessor, allBindingsAccessor);
+
+				value = valueAccessor()();
+				value = formatMoney.apply(value, [2].concat(config.format));
+
+				$(element).text(value);
+			},
+
+			parseFormatSpec: parseFormatSpec
+		}
+	})();	
+
 }));
