@@ -752,7 +752,7 @@
 				eventName: 'change',
 				escape: true,
 				silent: false,
-				previewError: true,
+				previewError: true
 			};
 
 			options = allBindingsAccessor('valueOptions');
