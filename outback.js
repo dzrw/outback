@@ -95,7 +95,7 @@
 		};
 	}
 
-	function makeBindingDecl (model, modelAttrName) {
+	function makeBindingDeclToModelAttr (model, modelAttrName) {
 		var subscribe, unsubscribe, valueAccessor;
 
 		subscribe = function(eventName, callback) {
@@ -117,35 +117,43 @@
 		};		
 	}
 
-	function makeBindingDeclReviver (model) {
+	function makeBindingDecl (model, symbol) {
+		if (!symbol) { return false; }
+
+		// If the symbol is a Backbone.Model attribute, bind to that.
+		if (hop(model.attributes, symbol)) {
+			return makeBindingDeclToModelAttr(model, symbol);
+		}
+
+		// TODO: If the symbol is a function, bind to that.
+		if (hop(model, symbol) && _.isFunction(model[symbol])) {}
+
+		// Otherwise, construct a binding to a Backbone.Model attribute
+		// despite the fact that it doesn't exist yet.
+		return makeBindingDeclToModelAttr(model, symbol);
+	}
+
+	function makeDataBindAttrBindingDeclReviver (model) {
+		function parseSymbol (value) {
+			return !!value 
+			    && hop(value, '__symbol_literal') 
+			    && value['__symbol_literal'];
+		}
+
 		return function(k, value) {
-			var interesting, modelAttrName;
-
-			interesting = hop(value, '__symbol_literal');
-			modelAttrName = value && value['__symbol_literal'];
-
-			if (interesting && hop(model.attributes, modelAttrName)) {
-				return makeBindingDecl(model, modelAttrName);
-			} else if (interesting) {
-				return undefined;
-			} else {
-				return value;
-			}
+			return makeBindingDecl (model, parseSymbol(value)) || value;
 		};    
 	}
 
 	function makeUnobtrusiveBindingDeclReviver (model) {
+		function parseSymbol (value) {
+			return !!value 
+			    && value instanceof OutbackModelRef 
+			    && value.modelAttrName;
+		}
+
 		return function(k, value) {
-			var interesting, modelAttrName;
-
-			interesting = value instanceof OutbackModelRef;
-			modelAttrName = value && value.modelAttrName;
-
-			if (interesting && hop(model.attributes, modelAttrName)) {
-				return makeBindingDecl(model, modelAttrName);
-			} else {
-				return value;
-			}
+			return makeBindingDecl (model, parseSymbol(value)) || value;
 		};    
 	}
 
@@ -160,7 +168,7 @@
 
 			element = view.$(this);
 			bindingExpr = element.attr(databindAttr);
-			directives = rj.parse(bindingExpr, makeBindingDeclReviver(model));
+			directives = rj.parse(bindingExpr, makeDataBindAttrBindingDeclReviver(model));
 
 			bindingDecls.push({
 				element: element,
