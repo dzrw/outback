@@ -34,40 +34,57 @@
 	}
 
 	function makeValueAccessorBuilder(model) {
+		function optionsFor(args) {
+			var options;
+
+			_.extend(options = {}, {
+				escape: false,
+				silent: false,
+				readMethod: 'get',
+				previewError: false
+			});
+
+			if (args && args.length === 1) {
+				_.extend(options, args[0]);
+			}
+
+			options.readMethod = options.escape ? 'escape' : 'get';
+			return options;
+		}
+
 		return function(binding) {
-			var defaultOptions, modelAttrName;
-
-			defaultOptions = {
-				escape: false
-			};
-
+			var modelAttrName;
 			modelAttrName = binding.modelAttrName;
 
 			var valueAccessor = function() {
-				var args, options, readMethod;
-
-				_.extend(options = {}, defaultOptions);
-
-				args = Array.prototype.slice.call(arguments);
-				if (args.length === 1) {
-					_.extend(options, args[0]);
-				}
+				var options;
+				options = optionsFor(Array.prototype.slice.call(arguments));
 
 				if (!!options.parents) {
 					return binding.parents;
 				}
 
-				readMethod = options.escape ? 'escape' : 'get';
-
 				var value = function() {
-					var args, modelAttr;
+					var args, modelAttr, changeSet, changeSetOptions;
 					args = Array.prototype.slice.call(arguments);
 					if (args.length === 0) {
-						modelAttr = model[readMethod](modelAttrName);
+						modelAttr = model[options.readMethod](modelAttrName);
 						return modelAttr;
 					} else {
-						modelAttr = args[0];
-						model.set(modelAttrName, modelAttr);
+						changeSet = {};
+						changeSet[modelAttrName] = args[0];
+
+						changeSetOptions = {};
+
+						if (!!options.silent) {
+							changeSetOptions.silent = true;							
+						}
+
+						if (!!options.previewError) {
+							changeSetOptions.error = binding.previewError;
+						}
+
+						model.set(changeSet, changeSetOptions);
 					}
 				};
 
@@ -82,14 +99,10 @@
 		var subscribe, unsubscribe, valueAccessor;
 
 		subscribe = function(eventName, callback) {
-			var eventName;
-			eventName = eventName || "change:" + modelAttrName;
 			model.on(eventName, callback);
 		};
 
 		unsubscribe = function(eventName) {
-			var eventName;
-			eventName = eventName || "change:" + modelAttrName;
 			model.off(eventName);
 		};
 
@@ -97,7 +110,7 @@
 			modelAttrName: modelAttrName,
 			valueAccessor: makeValueAccessorBuilder(model),
 			modelEvents: {
-				eventName: false,		// TODO: Defaults to "change:modelAttrName"
+				eventName: "change:" + modelAttrName,
 				subscribe: subscribe,
 				unsubscribe: unsubscribe
 			}
@@ -245,6 +258,20 @@
 		return executableBindings;
 	}
 
+	function improveExecutableBinding(binding, view) {
+		if (hop(binding.handler, 'previewError')) {
+			binding.previewError = function(model, error) {
+				var binderArgs, e, preventDefault;
+				e = {error: error, preventDefault: false};
+				binderArgs = [binding.element, binding.valueAccessor, binding.allBindingsAccessor, view, e];
+				binding.handler.previewError.apply(view, binderArgs);
+				if (!e.preventDefault) {
+					model.trigger('error', error);
+				}
+			};
+		}
+	}
+
 	function applyBinding (view, binding) {
 		var binders, binderArgs, eventName, updateFn;
 
@@ -343,6 +370,10 @@
 			bindings = [];
 			_.each(bindingDecls, function (bindingDecl) {
 				arrayConcat(bindings, filterExecutableBindings(bindingDecl, bindingHandlers));
+			});
+
+			_.each(bindings, function (binding) { 
+				improveExecutableBinding(binding, view);
 			});
 
 			if (typeof view.previewBinding === 'function') {
@@ -525,7 +556,7 @@
 	/*	The "css" binding
 
 		Usage:
-		data-bind="css: { class1: @modelAttr1, class2: @modelAttr2, class2Options: { not: <truthy> } }"
+		data-bind="css: { class1: @modelAttr1, class2: @modelAttr2, class2Options: { not: <truthy>, on: <string> } }"
 
 			@modelAttr is interpreted as truthy or falsy
 
@@ -690,13 +721,16 @@
 	/*	The "value" binding
 
 		Usage:
-		data-bind="value: @modelAttr, valueOptions { valueUpdate: 'eventName', escape: <truthy> }"
+		data-bind="value: @modelAttr, valueOptions { valueUpdate: 'eventName', escape: <truthy>, silent: <truthy> }"
 
 			valueUpdate defaults to 'change' if not specified
 
 			escape controls whether or not an HTML-escaped version of a model's
 			attribute is used.  Using escape to retrieve attributes will 
 			prevent XSS attacks.  The default is true.
+
+			silent determines whether setting the model triggers validation.
+			The default is false.
 
 		Purpose: The value binding links the associated DOM element’s value 
 		with a property on your view model. This is typically useful with 
@@ -708,7 +742,9 @@
 
 			config = {
 				eventName: 'change',
-				escape: true
+				escape: true,
+				silent: false,
+				previewError: true,
 			};
 
 			options = allBindingsAccessor('valueOptions');
@@ -719,26 +755,37 @@
 			if(options && hop(options, 'valueUpdate')) {
 				config.eventName = options.valueUpdate;
 			}
+
+			if(options && hop(options, 'silent')) {
+				config.silent = !!options.silent;
+			}
 			
 			return config;
 		}
 
 		return {		
 			init: function (element, valueAccessor, allBindingsAccessor, view) {
-				var config;
+				var config, writeOptions;
 				config = optionsFor(valueAccessor, allBindingsAccessor);
+
+				writeOptions = {
+					silent: config.silent,
+					previewError: config.previewError
+				};
 
 				$(element).on(config.eventName, function (e) {
 					var value;
 					value = $(element).val();
-					valueAccessor()(value);
+					valueAccessor(writeOptions)(value);
 				});
 			},
 			update: function (element, valueAccessor, allBindingsAccessor, view) {
-				var config, value;
+				var config, value, readOptions;
 				config = optionsFor(valueAccessor, allBindingsAccessor);
 
-				value = valueAccessor({escape: config.escape})();
+				readOptions = {escape: config.escape};
+
+				value = valueAccessor(readOptions)();
 				$(element).val(value);
 			},
 			remove: function (element, valueAccessor, allBindingsAccessor, view) {
@@ -746,6 +793,11 @@
 				config = optionsFor(valueAccessor, allBindingsAccessor);
 
 				$(element).off(config.eventName);	
+			},
+			previewError: function (element, valueAccessor, allBindingsAccessor, view, e) {
+				var error = e.error;
+				// TODO: Do something useful.
+				e.preventDefault = false;
 			}
 		}	
 	})();
