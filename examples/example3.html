@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"/>
+  <title>Example 3</title>
+  
+  <!-- include source files here... -->
+  <script type="text/javascript" src="../lib/jquery.js"></script>
+  <script type="text/javascript" src="../lib/underscore.js"></script>
+  <script type="text/javascript" src="../lib/backbone.js"></script>
+  <script type="text/javascript" src="../lib/rj.min.js"></script>
+  <script type="text/javascript" src="../outback.js"></script>
+
+</head>
+<body id="fixture">
+
+   <h2>The select Example</h2>
+
+   <p>This example uses the <i>value</i> bindings to keep a select control updated with the values of the form fields.<p>
+
+   <p>Mode of Transport: 
+      <select data-bind="value: @transport">
+         <option value="car">Car</option>
+         <option value="boat">Boat</option>
+         <option value="train">Train</option>
+      </select>
+   </p>
+   <p>You selected: <span data-bind="text: @transport"></span></p>
+   
+
+   <script type="text/javascript">
+
+// MainView is the ... main view.
+
+      var MainView = Backbone.View.extend({
+         el: '#fixture',
+
+         initialize: function() {
+            this.render();
+         },
+
+         render: function() {
+
+// Tell outback to get to work.
+ 
+            Backbone.outback.bind(this);
+         },
+
+         remove: function() {
+
+// Tell outback to clean up event handlers and whatnot.
+
+            Backbone.outback.unbind(this);
+         },
+
+         bindingSummary: function(summary) {
+            if (!console || typeof console.log !== 'function') return;
+
+// This is an optional hook which outback will call when it's finished binding
+// the view.  It's useful for debugging.  
+
+            console.log(summary);
+         }
+      });
+
+
+// MainModel holds the details of our form.
+
+      var MainModel = Backbone.Model.extend({
+         defaults: {
+            transport: 'badval'
+         },
+
+         initialize: function() {
+         }
+
+      });
+
+// ... and lift off!
+
+      $(function () {
+         window.app = new MainView({
+            model: new MainModel()
+         });
+      });
+   </script>
+</body>
+</html>

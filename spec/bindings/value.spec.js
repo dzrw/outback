@@ -1,37 +1,83 @@
 describe('the value binding', function() {
 
-	beforeEach(function() {
-		this.model = new AModel({firstName: 'Abram'});
-		this.view = new FixtureView({model: this.model});
-		_.extend(this.view, {
-			innerHtml: "<input type='text' data-bind='value: @firstName'>"
+	describe('should work with input controls', function() {
+	
+		beforeEach(function() {
+			this.model = new AModel({firstName: 'Abram'});
+			this.view = new FixtureView({model: this.model});
+			_.extend(this.view, {
+				innerHtml: "<input type='text' data-bind='value: @firstName'>"
+			})
+
+			this.view.render();
+			this.el = this.view.$('#anchor input');				
+		});
+
+		afterEach(function() {
+			this.view.remove();
 		})
 
-		this.view.render();
-		this.el = this.view.$('#anchor input');				
+		it('should update the value of the DOM element when the model changes', function() {
+			expect(this.el.size() > 0).toBeTruthy();
+			expect(this.el.val()).toBe('Abram');
+
+			this.model.set({firstName: 'Abraham'});
+
+			expect(this.el.val()).toBe('Abraham');
+		});
+		
+		it('should update the model when the value of the DOM element changes', function() {
+			expect(this.el.size() > 0).toBeTruthy();
+			expect(this.el.val()).toBe('Abram');
+
+			this.el.val('Abraham');
+			this.el.trigger('change');
+
+			expect(this.model.get('firstName')).toBe('Abraham');
+		});
+		
 	});
 
-	afterEach(function() {
-		this.view.remove();
-	})
-
-	it('should update the value of the DOM element when the model changes', function() {
-		expect(this.el.size() > 0).toBeTruthy();
-		expect(this.el.val()).toBe('Abram');
-
-		this.model.set({firstName: 'Abraham'});
-
-		expect(this.el.val()).toBe('Abraham');
-	});
+	describe('should work with select controls', function() {
 	
-	it('should update the model when the value of the DOM element changes', function() {
-		expect(this.el.size() > 0).toBeTruthy();
-		expect(this.el.val()).toBe('Abram');
+		beforeEach(function() {
+			this.model = new AModel({transport: 'car'});
+			this.view = new FixtureView({model: this.model});
+			_.extend(this.view, {
+				innerHtml: "<select type='text' data-bind='value: @transport'> \
+					<option value='car'>Car</option> \
+					<option value='boat'>Boat</option> \
+					<option value='train'>Train</option> \
+				</select>"
+			})
 
-		this.el.val('Abraham');
-		this.el.trigger('change');
+			this.view.render();
+			this.el = this.view.$('#anchor select');				
+		});
 
-		expect(this.model.get('firstName')).toBe('Abraham');
+		afterEach(function() {
+			this.view.remove();
+		})
+
+		it('should update the value of the DOM element when the model changes', function() {
+			expect(this.el.size() > 0).toBeTruthy();
+			expect(this.el.val()).toBe('car');
+
+			this.model.set({transport: 'boat'});
+
+			expect(this.el.val()).toBe('boat');
+		});
+		
+		it('should update the model when the value of the DOM element changes', function() {
+			expect(this.el.size() > 0).toBeTruthy();
+			expect(this.el.val()).toBe('car');
+
+			this.el.val('boat');
+			this.el.trigger('change');
+
+			expect(this.model.get('transport')).toBe('boat');
+		});
+		
 	});
 
 	describe('helps prevent XSS attacks', function() {
