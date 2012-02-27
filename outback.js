@@ -1073,7 +1073,7 @@
 				config = optionsFor(valueAccessor, allBindingsAccessor);
 
 				value = valueAccessor()();
-				value = formatMoney.apply(value, [2].concat(config.format));
+				value = _.isNaN(+value) ? 'NaN' : formatMoney.apply(value, [2].concat(config.format));
 
 				$(element).text(value);
 			},

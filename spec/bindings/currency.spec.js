@@ -62,4 +62,14 @@ describe('the currency binding', function() {
 
 		expect(this.el.text()).toBe('$3.14');
 	});
+
+
+	it('should render non-numeric values as "NaN"', function() {
+		this.view.render();
+		this.el = this.view.$('#anchor span');				
+
+		this.model.set({price: 'foo' });
+
+		expect(this.el.text()).toBe('NaN');
+	});	
 });
