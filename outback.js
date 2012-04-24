@@ -460,45 +460,49 @@
 	/*  The "visible" binding
 
 		Usage:
-		data-bind="visible: @modelAttr, visibleOptions: { not: <truthy> }"
+		data-bind="visible: @modelAttr"
 
 			@modelAttr is interpreted as truthy or falsy
 
-			not is used to flip the visibility test performed
-			by this binding. The default is false.
-		
 		Purpose: The visible binding causes the associated DOM element to 
 		become hidden or visible according to the value you pass to the 
 		binding.
 	*/
 	Backbone.outback.bindingHandlers['visible'] = (function() {
-		function optionsFor(allBindingsAccessor) {
-			var config, options;
-
-			config = {
-				not: false
-			};
-					
-			options = allBindingsAccessor('visibleOptions');
-			if (options && hop(options, 'not')) {
-				config.not = !!options.not;
-			}
-			
-			return config;
-		}
-
 		return {
 			update: function (element, valueAccessor, allBindingsAccessor, view) {
-				var config, value, names, index;
-				config = optionsFor(allBindingsAccessor);
+				var value, names, index;
 				
 				var names = ['show', 'hide'];
-				if (config.not) names.reverse();
 				var index = !!valueAccessor()() ? 0 : 1;
 
 				$(element)[names[index]]();
 			}
 		}
+	})();
+
+	/*  The "invisible" binding
+
+		Usage:
+		data-bind="invisible: @modelAttr"
+
+			@modelAttr is interpreted as truthy or falsy
+
+		Purpose: The invisible binding causes the associated DOM element 
+		to become hidden or visible according to the value you pass to the 
+		binding.
+	*/
+	Backbone.outback.bindingHandlers['invisible'] = (function() {
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var value, names, index;
+				
+				var names = ['hide', 'show'];
+				var index = !!valueAccessor()() ? 0 : 1;
+
+				$(element)[names[index]]();
+			}
+		}		
 	})();
 
 	/*	The "text" binding
