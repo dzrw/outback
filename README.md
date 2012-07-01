@@ -212,9 +212,9 @@ The following bindings were ported from KnockoutJS.
 
 ### Additional bindings
 
-	* _invisible_ is the opposite of the _visible_ binding
-	* _currency_ and _date_ are specialized implementations of _text_ for formatted currencies and dates.
-	* _options_
+1. _invisible_ is the opposite of the _visible_ binding
+2. _currency_ and _date_ are specialized implementations of _text_ for formatted currencies and dates.
+3. _options_ fetches `option` elements out of a selector and inserts them into a `select` element
 
 ## Can I add my own custom bindings?
 
