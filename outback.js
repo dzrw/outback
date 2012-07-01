@@ -1086,4 +1086,53 @@
 		}
 	})();	
 
+	/*  The "date" binding
+
+		Usage:
+		data-bind="date: @modelAttr, dateOptions: { format: <formatspec> }"
+
+		formatspec is a string which describes how a date must be
+		rendered. This string is used with Date.prototype.toString.
+
+		The default format specifier is 'yyyy-MM-dd'.
+
+		Purpose: The date binding causes the associated DOM element to
+		display the text value of the bound symbol formatted as a date.
+	*/
+	Backbone.outback.bindingHandlers['date'] = (function () {
+	    function optionsFor(valueAccessor, allBindingsAccessor) {
+	        var config, options;
+
+	        config = {
+	            format: 'yyyy-MM-dd'
+	        };
+
+	        options = allBindingsAccessor('dateOptions');
+	        if (options && hop(options, 'format')) {
+	            config.format = options.format;
+	        }
+
+	        return config;
+	    }
+
+	    function formatDate(value, format) {
+	        var d;
+	        d = Date.parse(value);
+	        return _.isNaN(d) || !d ? '' : d.toString(format);
+	    }
+
+	    return {
+	        update: function (element, valueAccessor, allBindingsAccessor, view) {
+	            var config, value;
+	            config = optionsFor(valueAccessor, allBindingsAccessor);
+
+	            value = valueAccessor()();
+	            value = formatDate(value, config.format);
+
+	            $(element).text(value);
+	        }
+	    };
+
+	})();
+	
 }));
