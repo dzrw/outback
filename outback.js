@@ -1134,5 +1134,52 @@
 	    };
 
 	})();
-	
+
+
+	/*  The "options" binding
+
+	    Usage:
+	    data-bind="options: @modelAttr, optionsOptions: { }"
+
+	    Purpose: The options binding is designed to support loading
+	    options for select controls.  The binding looks for the CSS
+	    selector specified by @modelAttr, and replaces the contents
+	    of the associated DOM element.
+	*/
+	Backbone.outback.bindingHandlers['options'] = (function () {
+	    function optionsFor(valueAccessor, allBindingsAccessor) {
+	        var config, options;
+
+	        config = {
+	            noContent: '<optgroup label="outback: No optgroups or options found"></optgroup>'
+	        };
+
+	        options = allBindingsAccessor('optionsOptions');
+
+	        return config;
+	    }
+
+	    return {
+	        update: function (element, valueAccessor, allBindingsAccessor, view) {
+	            var config, value, s, $options, $el;
+	            config = optionsFor(valueAccessor, allBindingsAccessor);
+
+	            value = valueAccessor()();
+	            $el = $(value);
+
+	            // If it's a script, unpack it.
+	            if (($options = $el.filter('script')).size() > 0) {
+	                $el = $($options.html());
+	            }
+
+	            // Otherwise, append the options and optgroups; or nothing.
+	            if (($options = $el.filter('optgroup, option')).size() > 0) {
+	                $(element).empty().append($options);
+	            } else {
+	                $(element).html(config.noContent);
+	            }
+	        }
+	    };
+	})();	
+
 }));
