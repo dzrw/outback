@@ -1,56 +1,125 @@
+# outback.js
+
 **outback** is a JavaScript library that extends [Backbone.js](http://documentcloud.github.com/backbone/) with support for [Knockout](http://knockoutjs.com)-inspired declarative bindings. 
 
-## tl;dr
+### Dependencies
 
-Sprinkle data-bind attributes into your templates:
+* jQuery (>=1.7)
+* [Backbone.js](http://documentcloud.github.com/backbone/) (>=0.9.1)
+* [Underscore.js](http://documentcloud.github.com/underscore/) (>=1.3.1)
+* [rj](https://github.com/politician/relaxed-json-parser)
+
+## Setup
+
+Just add these dependencies to your site's `<head>`, **in order**:
+
+```
+
+<script src="jquery.js"></script>
+<script src="underscore.js"></script>
+<script src="backbone.js"></script>
+<script src="rj.js"></script>
+<script src="outback.js"></script>
+
+```
+
+## Usage
+
+Let's start with a complete example (given in [CoffeeScript](http://coffeescript.org/)):
 
 ```HTML
 
-<!-- adds the CSS class 'editing' to the div when the 
-     viewModel's isEditing attribute is true, removes it
-     when it isn't -->
-
-<div data-bind-view="css: { editing: @isEditing }">
-
-	<!-- the input's value is two-way bound to the model's todo
-		 attribute, and the focus state of the control is two-way 
-		 bound to the viewModel's isEditing attribute -->
-
-	<input 	type="text" 
-			class="todo-input" 
-			data-bind="value: @todo" 
-			data-bind-view="hasfocus: @isEditing">
-
-</div>
+<body id="fixture">
+   <button id="show" data-bind="disable: @shouldShowMessage">Reveal Text</button>
+   <button id="reset" data-bind="enable: @shouldShowMessage">Reset</button>
+   <div data-bind="visible: @shouldShowMessage">
+      <p>You will see this message only when "shouldShowMessage" holds a true value.</p>
+   </div>
+</body>
 
 ```
-
-Then setup up your view:
 
 ```CoffeeScript
 
-class TodoModel extends Backbone.Model
-	defaults:
-		todo: 'Learn outback.js'
+class MainView extends Backbone.View
+	events:
+		'click #show': 'showMessage'
+		'click #reset': 'hideMessage'
 
-class TodoView extends Backbone.View
-	model: TodoModel
+	initialize: ->
+	   @render()
 
-	# use a viewModel for transient state (optional)
-	viewModel: new Backbone.Model
-		isEditing: false
-
-	@render: ->
+	render: ->
 		Backbone.outback.bind @
 
-	@remove: ->
+	remove: ->
 		Backbone.outback.unbind @
+
+	showMessage: function() {
+		@model.set shouldShowMessage: true
+
+	hideMessage: function() {
+		@model.set shouldShowMessage: false
+
+$ ->
+	window.app = new MainView
+   		el: '#fixture'
+	    model: new Backbone.Model 
+	    	shouldShowMessage: false
 
 ```
 
+Here's a more detailed rundown.
+
+### Step 1: Configure bindings
+
+Configure your markup and templates with 'data-bind' attributes to bind elements to Backbone.Model attributes:
+
+```HTML
+
+<body id="fixture">
+   <button id="show" data-bind="disable: @shouldShowMessage">Reveal Text</button>
+   <button id="reset" data-bind="enable: @shouldShowMessage">Reset</button>
+   <div data-bind="visible: @shouldShowMessage">
+      <p>You will see this message only when "shouldShowMessage" holds a true value.</p>
+   </div>
+</body>
+
+```
+
+The directionality of the binding is handled in the binding API. For example, **text** is a one-way binding useful for spans and paragraphs, and **value** is a two-way binding that is useful for form inputs, selects, and textareas.
+
+### Step 2: Kickstart outback in `render`
+
+In the `render` method of your Backbone.View, call `bind` after appending your markup to `$el`:
+
+```CoffeeScript
+
+render: ->
+	Backbone.outback.bind @
+
+```
+
+### Step 3: Clean up your toys in `remove`
+
+Under the hood, outback attaches `change` event handlers to your model.  In order to avoid leaks and zombie function callbacks, you'll need to `unbind` the view in `remove`:
+
+```CoffeeScript
+
+remove: ->
+	Backbone.outback.unbind @
+
+```
+
+That's it!
+
+## Does this work with regular JavaScript?
+
+Yes.
+
 ## Can I configure the bindings in code instead?
 
-Yes, outback bindings can be setup in either code or markup; feel free to mix and match.
+Yes, bindings can be setup in either code or markup; feel free to mix and match.
 
 ```CoffeeScript
 
@@ -70,11 +139,63 @@ class TodoView extends Backbone.View
 
 ```
 
-## Does this work with regular JavaScript?
+Use the `''` selector to target `$el`.
 
-Yes.
+## How do I implement dependent controls or computed functions?
+
+There is no specific support for computed functions in outback because Backbone.js handles this case well enough on its own:
+
+```HTML
+	<p data-bind="text: @fullname"></p>
+```
+
+```CoffeeScript
+
+class MyModel extends Backbone.Model
+	initialize: ->
+		@on 'change:firstName change:lastName', @fullname, @
+
+	fullname: ->
+		fname = @get 'firstName'
+		lname = @get 'lastName'
+		@set fullname: "#{fname} #{lname}"
+
+```
+
+See examples/example2.html for a working example of this use case.
+
+## How do I specify the options of a select control?
+
+Use the `options` binding as follows:
+
+```HTML
+	<script type="text/ignore" id="hotel-options">
+		<option value="5">5 star</option>
+		<option value="4">4 star</option>
+		<option value="3">3 star</option>
+	</script>
+
+	<!-- ... later ... -->
+
+	<div id="fixture">
+		<select data-bind="options: @hotelOptions"></select>
+	</div>
+```
+
+```CoffeeScript
+
+	view = new SomeView
+		el: $('#fixture')
+		model = new Backbone.Model
+			hotelOptions: '#hotel-options'
+
+```
 
 ## Which bindings are currently supported?
+
+### KnockoutJS bindings
+
+The following bindings were ported from KnockoutJS.
 
 [visible][v], [text][t], [html][h], [css][css], ~~style~~, [attr][attr], ~~click~~, ~~event~~, ~~submit~~, [enable][en], [disable][de], [value][value], [hasfocus][hf], [checked][ck]
 
@@ -89,9 +210,15 @@ Yes.
 [hf]: http://knockoutjs.com/documentation/hasfocus-binding.html
 [ck]: http://knockoutjs.com/documentation/checked-binding.html
 
+### Additional bindings
+
+	* _invisible_ is the opposite of the _visible_ binding
+	* _currency_ and _date_ are specialized implementations of _text_ for formatted currencies and dates.
+	* _options_
+
 ## Can I add my own custom bindings?
 
-Yes.
+Yes, the binding handler API is 100% compatible with KnockoutJS.  You should be able to reuse your existing binding handlers by simply adding them to the `bindingHandlers` object.
 
 ```CoffeeScript
 
@@ -123,10 +250,14 @@ Backbone.outback.bindingHandlers['custom'] = ->
 
 ## Can I include arbitrary JavaScript expressions in my data-binds?
 
-No. 
+No, and in this respect we break compatiblility with KnockoutJS.
 
-1. `data-bind` attributes are handled by [rj](https://github.com/politician/relaxed-json-parser) which recognizes a small superset of JSON.  Specifically, the `@name` notation is parsed using the rules for JavaScript identifiers.
-2. Personally, I don't think it's a good idea to put that kind of logic in markup.
+1. Personally, I don't think it's a good idea to put that kind of logic in markup.
+2. Technically, `data-bind` attributes are handled by [rj](https://github.com/politician/relaxed-json-parser) which recognizes a small superset of JSON.  Specifically, the `@name` notation is parsed using the rules for JavaScript identifiers.
+
+## TodosMVC?
+
+[Yes](https://github.com/politician/outback/tree/master/examples/todos)
 
 ## XSS?
 
@@ -136,10 +267,6 @@ The `text`, `value`, and `attr` bindings use `model.escape` instead of `model.ge
 <!-- prevent outback from mangling the url -->
 <a data-bind="attr: { href: @url, hrefOptions: { escape: false } }"></a>
 ```
-
-## Todos?
-
-[In progress](https://github.com/politician/outback/tree/master/examples/todos)
 
 ## A little more documentation would be helpful...
 
