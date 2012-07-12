@@ -1,4 +1,4 @@
-/* outback.js v0.1.0 - a data binding library for backbone
+/* outback.js v0.2.0 - a data binding library for backbone
    (c) David Zarlengo -- http://github.com/politician/outback
    License: MIT (http://www.opensource.org/licenses/mit-license.php)
 */
