@@ -281,7 +281,7 @@
 	}
 
 	function applyBinding (view, binding) {
-		var binders, binderArgs, eventName, updateFn;
+		var binders, binderArgs, eventName, updateFn, fn;
 
 		binders = {
 			modelSubs: [],
@@ -299,9 +299,11 @@
 
 		updateFn = binding.handler.update;
 
-		binders.updates.push(function() { 
+		binders.updates.push(fn = function() { 
 			updateFn.apply(view, binderArgs); 
 		});
+
+		fn.priority = +binding.handler.updatePriority || 10;
 
 		binders.modelSubs.push(function() {
 			binding.modelEvents.subscribe(binding.modelEvents.eventName, function(m, val) {
@@ -323,7 +325,7 @@
 			binders.removes.push(function() { 
 				binding.handler.remove.apply(view, binderArgs); 
 			});
-		}
+		}		
 
 		return binders;	
 	}
@@ -409,7 +411,7 @@
 			// Run binders in stages because we want to avoid cascades.
 
 			eachfn(allBinders.inits);
-			eachfn(allBinders.updates);
+			eachfn(_.sortBy(allBinders.updates, function (fn) { return fn.priority; }));
 			eachfn(allBinders.modelSubs);
 
 			if (typeof view.bindingSummary === 'function') {
@@ -1178,8 +1180,9 @@
 	            } else {
 	                $(element).html(config.noContent);
 	            }
-	        }
+	        },
+	        updatePriority: 1
 	    };
-	})();	
+	}());	
 
 }));
