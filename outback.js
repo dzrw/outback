@@ -1,4 +1,4 @@
-/* outback.js v0.2.0 - a data binding library for backbone
+/* outback.js v0.2.1 - a data binding library for backbone
    (c) David Zarlengo -- http://github.com/politician/outback
    License: MIT (http://www.opensource.org/licenses/mit-license.php)
 */
@@ -14,7 +14,7 @@
 	}
 }(this, function($, _, Backbone, rj) {
 
-	var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;    
+	var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
 
 	function stringTrim (string) {
 		return (string || "").replace(stringTrimRegex, "");
@@ -77,7 +77,7 @@
 						changeSetOptions = {};
 
 						if (!!options.silent) {
-							changeSetOptions.silent = true;							
+							changeSetOptions.silent = true;
 						}
 
 						if (!!options.previewError) {
@@ -106,7 +106,7 @@
 			model.off(eventName);
 		};
 
-		return { 
+		return {
 			modelAttrName: modelAttrName,
 			valueAccessor: makeValueAccessorBuilder(model),
 			modelEvents: {
@@ -114,7 +114,7 @@
 				subscribe: subscribe,
 				unsubscribe: unsubscribe
 			}
-		};		
+		};
 	}
 
 	function makeBindingDecl (model, symbol) {
@@ -135,26 +135,26 @@
 
 	function makeDataBindAttrBindingDeclReviver (model) {
 		function parseSymbol (value) {
-			return !!value 
-			    && hop(value, '__symbol_literal') 
-			    && value['__symbol_literal'];
+			return !!value
+				&& hop(value, '__symbol_literal')
+				&& value['__symbol_literal'];
 		}
 
 		return function(k, value) {
 			return makeBindingDecl (model, parseSymbol(value)) || value;
-		};    
+		};
 	}
 
 	function makeUnobtrusiveBindingDeclReviver (model) {
 		function parseSymbol (value) {
-			return !!value 
-			    && value instanceof OutbackModelRef 
-			    && value.modelAttrName;
+			return !!value
+				&& value instanceof OutbackModelRef
+				&& value.modelAttrName;
 		}
 
 		return function(k, value) {
 			return makeBindingDecl (model, parseSymbol(value)) || value;
-		};    
+		};
 	}
 
 	function parseDataBindAttrBindingDecls (databindAttr, view, model) {
@@ -163,7 +163,7 @@
 		bindingDecls = [];
 		selector = "["+databindAttr+"]";
 
-		view.$(selector).each(function () { 
+		view.$(selector).each(function () {
 			var element, bindingExpr, directives;
 
 			element = view.$(this);
@@ -227,7 +227,7 @@
 		allBindings = {};
 		executableBindings = [];
 
-		allBindingsAccessor = function() { 
+		allBindingsAccessor = function() {
 			var args, modelAttr;
 			args = Array.prototype.slice.call(arguments);
 			if (args.length === 0) {
@@ -260,7 +260,7 @@
 				delete binding.valueAccessor;
 			}
 
-			allBindings[key] = binding;        
+			allBindings[key] = binding;
 		});
 
 		return executableBindings;
@@ -299,15 +299,15 @@
 
 		updateFn = binding.handler.update;
 
-		binders.updates.push(fn = function() { 
-			updateFn.apply(view, binderArgs); 
+		binders.updates.push(fn = function() {
+			updateFn.apply(view, binderArgs);
 		});
 
 		fn.priority = +binding.handler.updatePriority || 10;
 
 		binders.modelSubs.push(function() {
 			binding.modelEvents.subscribe(binding.modelEvents.eventName, function(m, val) {
-				updateFn.apply(view, binderArgs);	
+				updateFn.apply(view, binderArgs);
 			});
 		});
 
@@ -317,17 +317,17 @@
 
 		if (hop(binding.handler, 'init')) {
 			binders.inits.push(function() {
-				binding.handler.init.apply(view, binderArgs); 
+				binding.handler.init.apply(view, binderArgs);
 			});
 		}
 
 		if (hop(binding.handler, 'remove')) {
-			binders.removes.push(function() { 
-				binding.handler.remove.apply(view, binderArgs); 
+			binders.removes.push(function() {
+				binding.handler.remove.apply(view, binderArgs);
 			});
-		}		
+		}
 
-		return binders;	
+		return binders;
 	}
 
 	var OutbackModelRef = function (modelAttrName) {
@@ -344,7 +344,7 @@
 			removes: [],
 			modelUnsubs: []
 		};
-		
+
 		bindingContexts = {
 			model: {
 				dataSource: view.model,
@@ -382,7 +382,7 @@
 				arrayConcat(bindings, filterExecutableBindings(bindingDecl, bindingHandlers));
 			});
 
-			_.each(bindings, function (binding) { 
+			_.each(bindings, function (binding) {
 				improveExecutableBinding(binding, view);
 			});
 
@@ -423,8 +423,8 @@
 			eachfn(allBinders.modelUnsubs);
 			eachfn(allBinders.removes);
 		}
-	};	
-	
+	};
+
 	// PUBLIC API FOR BACKBONE VIEWS
 	// @render: -> Backbone.outback.bind @
 	// @remove: -> Backbone.outback.unbind @
@@ -445,7 +445,7 @@
 			return new OutbackModelRef(modelAttrName);
 		},
 
-		bindingHandlers: {}		
+		bindingHandlers: {}
 	};
 
 	Backbone.View.prototype.modelref = function(name) {
@@ -466,15 +466,15 @@
 
 			@modelAttr is interpreted as truthy or falsy
 
-		Purpose: The visible binding causes the associated DOM element to 
-		become hidden or visible according to the value you pass to the 
+		Purpose: The visible binding causes the associated DOM element to
+		become hidden or visible according to the value you pass to the
 		binding.
 	*/
 	Backbone.outback.bindingHandlers['visible'] = (function() {
 		return {
 			update: function (element, valueAccessor, allBindingsAccessor, view) {
 				var value, names, index;
-				
+
 				var names = ['show', 'hide'];
 				var index = !!valueAccessor()() ? 0 : 1;
 
@@ -490,21 +490,21 @@
 
 			@modelAttr is interpreted as truthy or falsy
 
-		Purpose: The invisible binding causes the associated DOM element 
-		to become hidden or visible according to the value you pass to the 
+		Purpose: The invisible binding causes the associated DOM element
+		to become hidden or visible according to the value you pass to the
 		binding.
 	*/
 	Backbone.outback.bindingHandlers['invisible'] = (function() {
 		return {
 			update: function (element, valueAccessor, allBindingsAccessor, view) {
 				var value, names, index;
-				
+
 				var names = ['hide', 'show'];
 				var index = !!valueAccessor()() ? 0 : 1;
 
 				$(element)[names[index]]();
 			}
-		}		
+		}
 	})();
 
 	/*	The "text" binding
@@ -513,7 +513,7 @@
 		data-bind="text: @modelAttr, textOptions: { escape: <truthy> }"
 
 			escape controls whether or not an HTML-escaped version of a model's
-			attribute is used.  Using escape to retrieve attributes will 
+			attribute is used.  Using escape to retrieve attributes will
 			prevent XSS attacks.  The default is true.
 
 		Purpose: The text binding causes the associated DOM element to display
@@ -526,12 +526,12 @@
 			config = {
 				escape: true
 			};
-					
+
 			options = allBindingsAccessor('textOptions');
 			if (options && hop(options, 'escape')) {
 				config.escape = !!options.escape;
 			}
-			
+
 			return config;
 		}
 
@@ -555,7 +555,7 @@
 		the HTML specified by your parameter.
 
 		Remarks: The escape option is not honored by this binding because
-		jQuery provides its own XSS protection. 
+		jQuery provides its own XSS protection.
 	*/
 	Backbone.outback.bindingHandlers['html'] = (function() {
 		return {
@@ -599,7 +599,7 @@
 					config.not = !!options.not;
 				}
 			}
-			
+
 			return config;
 		}
 
@@ -625,9 +625,9 @@
 		data-bind="attr: { attr1: @modelAttr1, attr2: @modelAttr2, attr2Options: { escape: <truthy> } }"
 
 			@modelAttr is interpreted as attribute values
-			
+
 			escape controls whether or not an HTML-escaped version of a model's
-			attribute is used.  Using escape to retrieve attributes will 
+			attribute is used.  Using escape to retrieve attributes will
 			prevent XSS attacks.  The default is true.
 
 		Purpose: The attr binding provides a generic way to set the value of
@@ -659,7 +659,7 @@
 					config.escape = !!options.escape;
 				}
 			}
-			
+
 			return config;
 		}
 
@@ -691,14 +691,14 @@
 
 	// Working with Form Fields
 	// ===================================
-	
+
 	/*  The "enable" binding
 
 		Usage:
 		data-bind="enable: @modelAttr"
 
 			@modelAttr is interpreted as truthy or falsy
-		
+
 		Purpose: The enable binding causes the associated DOM element to be
 		enabled only when the parameter value is true.
 	*/
@@ -711,14 +711,14 @@
 			}
 		}
 	})();
-	
+
 	/*  The "disable" binding
 
 		Usage:
 		data-bind="disable: @modelAttr"
 
 			@modelAttr is interpreted as truthy or falsy
-		
+
 		Purpose: The disable binding causes the associated DOM element to be
 		disable only when the parameter value is true.
 	*/
@@ -740,14 +740,14 @@
 			valueUpdate defaults to 'change' if not specified
 
 			escape controls whether or not an HTML-escaped version of a model's
-			attribute is used.  Using escape to retrieve attributes will 
+			attribute is used.  Using escape to retrieve attributes will
 			prevent XSS attacks.  The default is true.
 
 			silent determines whether setting the model triggers validation.
 			The default is false.
 
-		Purpose: The value binding links the associated DOM element’s value 
-		with a property on your view model. This is typically useful with 
+		Purpose: The value binding links the associated DOM element’s value
+		with a property on your view model. This is typically useful with
 		form elements such as <input>, <select> and <textarea>.
 	*/
 	Backbone.outback.bindingHandlers['value'] = (function() {
@@ -777,11 +777,11 @@
 			if(options && hop(options, 'silent')) {
 				config.silent = !!options.silent;
 			}
-			
+
 			return config;
 		}
 
-		return {		
+		return {
 			init: function (element, valueAccessor, allBindingsAccessor, view) {
 				var config, writeOptions;
 				config = optionsFor(element, valueAccessor, allBindingsAccessor);
@@ -810,14 +810,14 @@
 				var config;
 				config = optionsFor(element, valueAccessor, allBindingsAccessor);
 
-				$(element).off(config.eventName);	
+				$(element).off(config.eventName);
 			},
 			previewError: function (element, valueAccessor, allBindingsAccessor, view, e) {
 				var error = e.error;
 				// TODO: Do something useful.
 				e.preventDefault = false;
 			}
-		}	
+		}
 	})();
 
 	/*	The "hasfocus" binding
@@ -830,14 +830,14 @@
 		Purpose: The hasfocus binding links a DOM element’s focus state with a
 		model property. It is a two-way binding, so:
 
-			* If you set the viewmodel property to true or false, the 
+			* If you set the viewmodel property to true or false, the
 			  associated element will become focused or unfocused.
 
 			* If the user manually focuses or unfocuses the associated element,
 			  the model property will be set to true or false accordingly. This
-			  is useful if you’re building sophisticated forms in which 
-			  editable elements appear dynamically, and you would like to 
-			  control where the user should start typing, or respond to the 
+			  is useful if you’re building sophisticated forms in which
+			  editable elements appear dynamically, and you would like to
+			  control where the user should start typing, or respond to the
 			  location of the caret.
 	*/
 	Backbone.outback.bindingHandlers['hasfocus'] = (function() {
@@ -867,7 +867,7 @@
 			},
 			remove: function (element, valueAccessor, allBindingsAccessor, view) {
 				$(element).off('focus blur');
-			}		
+			}
 		};
 	})();
 
@@ -876,12 +876,12 @@
 		Usage:
 		data-bind="checked: @modelAttr"
 
-			if the element is a checkbox, then @modelAttr is interpreted as 
+			if the element is a checkbox, then @modelAttr is interpreted as
 			truthy or falsy; otherwise, if the element is a radio button
 			@modelAttr is interpreted as the value of the radio button
 
-		Purpose: The checked binding links a checkable form control — i.e., a 
-		checkbox (<input type='checkbox'>) or a radio button 
+		Purpose: The checked binding links a checkable form control — i.e., a
+		checkbox (<input type='checkbox'>) or a radio button
 		(<input type='radio'>) — with a property on your view model.
 	*/
 	Backbone.outback.bindingHandlers['checked'] = (function() {
@@ -893,14 +893,14 @@
 			} else{
 				label = $el.val();
 				return label;
-			}			
+			}
 		}
 
 		function domWrite($el, actual) {
 			var checked, value, comparand;
 			switch($el.attr('type')) {
 				case 'radio':
-					value = $el.val(); 
+					value = $el.val();
 					comparand = _.isString(value) ? '' + actual : actual;
 					checked = value === comparand
 					$el.prop('checked', checked);
@@ -913,14 +913,14 @@
 					break;
 			}
 		}
-		
+
 		return {
 			init: function (element, valueAccessor, allBindingsAccessor, view) {
 				$(element).on('change', function (e) {
 					var domValue;
 					domValue = domRead($(element));
 					valueAccessor()(domValue);
-				});			
+				});
 			},
 			update: function (element, valueAccessor, allBindingsAccessor, view) {
 				var value;
@@ -929,7 +929,7 @@
 			},
 			remove: function (element, valueAccessor, allBindingsAccessor, view) {
 				$(element).off('change');
-			}		
+			}
 		};
 	})();
 
@@ -937,7 +937,7 @@
 	// Working with Collections
 	// ===============================
 
-		
+
 	// Other Miscellaneous Bindings
 	// ===============================
 
@@ -966,12 +966,12 @@
 				word: 'item',
 				lang: 'enUS'
 			};
-					
+
 			options = allBindingsAccessor('pluralOptions');
 			if (options && hop(options, 'word')) {
 				config.word = ''+options.word;
 			}
-			
+
 			return config;
 		}
 
@@ -1010,7 +1010,7 @@
 			formatspec is a string which describes how a monetary value must be
 			rendered. This string must match the RegExp,
 
-			    /^([^\d]*)9([^\d]?)999([^\d])99([^\d]*)$/
+				/^([^\d]*)9([^\d]?)999([^\d])99([^\d]*)$/
 
 			where the capture groups are interpreted as follows:
 
@@ -1021,10 +1021,10 @@
 
 			The default format specifier is '$9,999.99'.
 
-			negativeClass is the name of a CSS class to add to the element 
+			negativeClass is the name of a CSS class to add to the element
 			when the value is less than 0. The default is 'currency-negative'.
 
-		Purpose: The currency binding causes the associated DOM element to 
+		Purpose: The currency binding causes the associated DOM element to
 		display the text value of the bound symbol formatted as a currency.
 	*/
 	Backbone.outback.bindingHandlers['currency'] = (function() {
@@ -1034,7 +1034,7 @@
 			config = {
 				format: [ '$', ',', '.', '' ]
 			};
-					
+
 			options = allBindingsAccessor('currencyOptions');
 			if (options && hop(options, 'format')) {
 				config.format = parseFormatSpec(options.format) || config.format;
@@ -1054,27 +1054,27 @@
 		}
 
 		// http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript
-		// with modifications to specify radix in parseInt, to wrap negative values in parens, and 
+		// with modifications to specify radix in parseInt, to wrap negative values in parens, and
 		// to display a currency symbol if specified
 		function formatMoney (c, prefix, t, d, suffix) {
-			var n = this, 
-				c = isNaN(c = Math.abs(c)) ? 2 : c, 
-				d = d == undefined ? "," : d, 
-				t = t == undefined ? "." : t, 
+			var n = this,
+				c = isNaN(c = Math.abs(c)) ? 2 : c,
+				d = d == undefined ? "," : d,
+				t = t == undefined ? "." : t,
 				s1 = n < 0 ? "(" : "",
 				s2 = n < 0 ? ")" : "",
 				prefix = prefix == undefined ? "" : prefix,
 				suffix = suffix == undefined ? "" : suffix,
-				i = parseInt(n = Math.abs(+n || 0).toFixed(c), 10) + "", 
+				i = parseInt(n = Math.abs(+n || 0).toFixed(c), 10) + "",
 				j = (j = i.length) > 3 ? j % 3 : 0;
 
-		   return s1 
-		        + prefix 
-		        + (j ? i.substr(0, j) + t : "") 
-		        + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) 
-		        + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "") 
-		        + suffix 
-		        + s2;
+		   return s1
+				+ prefix
+				+ (j ? i.substr(0, j) + t : "")
+				+ i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t)
+				+ (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "")
+				+ suffix
+				+ s2;
 		};
 
 		return {
@@ -1090,7 +1090,7 @@
 
 			parseFormatSpec: parseFormatSpec
 		}
-	})();	
+	})();
 
 	/*  The "date" binding
 
@@ -1106,87 +1106,87 @@
 		display the text value of the bound symbol formatted as a date.
 	*/
 	Backbone.outback.bindingHandlers['date'] = (function () {
-	    function optionsFor(valueAccessor, allBindingsAccessor) {
-	        var config, options;
+		function optionsFor(valueAccessor, allBindingsAccessor) {
+			var config, options;
 
-	        config = {
-	            format: 'yyyy-MM-dd'
-	        };
+			config = {
+				format: 'yyyy-MM-dd'
+			};
 
-	        options = allBindingsAccessor('dateOptions');
-	        if (options && hop(options, 'format')) {
-	            config.format = options.format;
-	        }
+			options = allBindingsAccessor('dateOptions');
+			if (options && hop(options, 'format')) {
+				config.format = options.format;
+			}
 
-	        return config;
-	    }
+			return config;
+		}
 
-	    function formatDate(value, format) {
-	        var d;
-	        d = Date.parse(value);
-	        return _.isNaN(d) || !d ? '' : d.toString(format);
-	    }
+		function formatDate(value, format) {
+			var d;
+			d = Date.parse(value);
+			return _.isNaN(d) || !d ? '' : d.toString(format);
+		}
 
-	    return {
-	        update: function (element, valueAccessor, allBindingsAccessor, view) {
-	            var config, value;
-	            config = optionsFor(valueAccessor, allBindingsAccessor);
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config, value;
+				config = optionsFor(valueAccessor, allBindingsAccessor);
 
-	            value = valueAccessor()();
-	            value = formatDate(value, config.format);
+				value = valueAccessor()();
+				value = formatDate(value, config.format);
 
-	            $(element).text(value);
-	        }
-	    };
+				$(element).text(value);
+			}
+		};
 
 	})();
 
 
 	/*  The "options" binding
 
-	    Usage:
-	    data-bind="options: @modelAttr, optionsOptions: { }"
+		Usage:
+		data-bind="options: @modelAttr, optionsOptions: { }"
 
-	    Purpose: The options binding is designed to support loading
-	    options for select controls.  The binding looks for the CSS
-	    selector specified by @modelAttr, and replaces the contents
-	    of the associated DOM element.
+		Purpose: The options binding is designed to support loading
+		options for select controls.  The binding looks for the CSS
+		selector specified by @modelAttr, and replaces the contents
+		of the associated DOM element.
 	*/
 	Backbone.outback.bindingHandlers['options'] = (function () {
-	    function optionsFor(valueAccessor, allBindingsAccessor) {
-	        var config, options;
+		function optionsFor(valueAccessor, allBindingsAccessor) {
+			var config, options;
 
-	        config = {
-	            noContent: '<optgroup label="outback: No optgroups or options found"></optgroup>'
-	        };
+			config = {
+				noContent: '<optgroup label="outback: No optgroups or options found"></optgroup>'
+			};
 
-	        options = allBindingsAccessor('optionsOptions');
+			options = allBindingsAccessor('optionsOptions');
 
-	        return config;
-	    }
+			return config;
+		}
 
-	    return {
-	        update: function (element, valueAccessor, allBindingsAccessor, view) {
-	            var config, value, s, $options, $el;
-	            config = optionsFor(valueAccessor, allBindingsAccessor);
+		return {
+			update: function (element, valueAccessor, allBindingsAccessor, view) {
+				var config, value, s, $options, $el;
+				config = optionsFor(valueAccessor, allBindingsAccessor);
 
-	            value = valueAccessor()();
-	            $el = $(value);
+				value = valueAccessor()();
+				$el = $(value);
 
-	            // If it's a script, unpack it.
-	            if (($options = $el.filter('script')).size() > 0) {
-	                $el = $($options.html());
-	            }
+				// If it's a script, unpack it.
+				if (($options = $el.filter('script')).size() > 0) {
+					$el = $($options.html());
+				}
 
-	            // Otherwise, append the options and optgroups; or nothing.
-	            if (($options = $el.filter('optgroup, option')).size() > 0) {
-	                $(element).empty().append($options);
-	            } else {
-	                $(element).html(config.noContent);
-	            }
-	        },
-	        updatePriority: 1
-	    };
-	}());	
+				// Otherwise, append the options and optgroups; or nothing.
+				if (($options = $el.filter('optgroup, option')).size() > 0) {
+					$(element).empty().append($options);
+				} else {
+					$(element).html(config.noContent);
+				}
+			},
+			updatePriority: 1
+		};
+	}());
 
 }));
