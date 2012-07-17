@@ -751,7 +751,7 @@
 		form elements such as <input>, <select> and <textarea>.
 	*/
 	Backbone.outback.bindingHandlers['value'] = (function() {
-		function optionsFor(valueAccessor, allBindingsAccessor) {
+		function optionsFor(element, valueAccessor, allBindingsAccessor) {
 			var config, options;
 
 			config = {
@@ -760,6 +760,10 @@
 				silent: false,
 				previewError: true
 			};
+
+			if ($(element).filter('select').size() > 0) {
+				config.escape = false;
+			}
 
 			options = allBindingsAccessor('valueOptions');
 			if(options && hop(options, 'escape')) {
@@ -780,7 +784,7 @@
 		return {		
 			init: function (element, valueAccessor, allBindingsAccessor, view) {
 				var config, writeOptions;
-				config = optionsFor(valueAccessor, allBindingsAccessor);
+				config = optionsFor(element, valueAccessor, allBindingsAccessor);
 
 				writeOptions = {
 					silent: config.silent,
@@ -795,7 +799,7 @@
 			},
 			update: function (element, valueAccessor, allBindingsAccessor, view) {
 				var config, value, readOptions;
-				config = optionsFor(valueAccessor, allBindingsAccessor);
+				config = optionsFor(element, valueAccessor, allBindingsAccessor);
 
 				readOptions = {escape: config.escape};
 
@@ -804,7 +808,7 @@
 			},
 			remove: function (element, valueAccessor, allBindingsAccessor, view) {
 				var config;
-				config = optionsFor(valueAccessor, allBindingsAccessor);
+				config = optionsFor(element, valueAccessor, allBindingsAccessor);
 
 				$(element).off(config.eventName);	
 			},

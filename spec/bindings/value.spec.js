@@ -80,6 +80,73 @@ describe('the value binding', function() {
 		
 	});
 
+	describe('should work with select controls with multiple="multiple"', function() {
+
+		beforeEach(function() {
+			this.model = new AModel({car: 'volvo'});
+			this.view = new FixtureView({model: this.model});
+			_.extend(this.view, {
+				innerHtml: 
+				"<select type='text' multiple='multiple' data-bind='value: @car'> \
+					<option value='volvo'>Volvo</option>\
+					<option value='saab'>Saab</option>\
+					<option value='mercedes'>Mercedes</option>\
+					<option value='audi'>Audi</option>\
+				</select>"
+			})
+
+			this.view.render();
+			this.el = this.view.$('#anchor select');				
+		});
+
+		afterEach(function() {
+			this.view.remove();
+		})
+
+		it('should update the value of the DOM element when the model changes', function() {
+			expect(this.el.size() > 0).toBeTruthy();
+			expect(this.el.val()).toContain('volvo');
+
+			this.model.set({car: 'saab'});
+
+			expect(this.el.val()).toContain('saab');
+		});
+		
+		it('should update the model when the value of the DOM element changes', function() {
+			expect(this.el.size() > 0).toBeTruthy();
+			expect(this.el.val()).toContain('volvo');
+
+			this.el.val('saab');
+			this.el.trigger('change');
+
+			expect(this.model.get('car')).toContain('saab');
+		});
+
+		it('should select multiple DOM elements when the model is set to an array', function() {
+			expect(this.el.size() > 0).toBeTruthy();
+			expect(this.el.val()).toContain('volvo');
+
+			this.model.set({car: ['saab','audi']});
+
+			var val = this.el.val();
+			expect(val).not.toBeNull();
+			expect(val).toContain('saab');
+			expect(val).toContain('audi');
+		});
+	
+		it('should set the model to an array when multiple options in the DOM are selected', function() {
+			expect(this.el.size() > 0).toBeTruthy();
+			expect(this.el.val()).toContain('volvo');
+
+			this.el.val(['saab','audi']);
+			this.el.trigger('change');
+
+			var val = this.model.get('car');
+			expect(val).toContain('saab');
+			expect(val).toContain('audi');
+		});
+	});
+
 	describe('helps prevent XSS attacks', function() {
 		var xssPayload = "<script>(function() { var xss = 'in ur page, hackin ur users'; })();</script>";
 		var xssPayloadEscaped = '&lt;script&gt;(function() { var xss = &#x27;in ur page, hackin ur users&#x27;; })();&lt;&#x2F;script&gt;'
