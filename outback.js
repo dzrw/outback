@@ -1165,22 +1165,51 @@
 			return config;
 		}
 
+		function domUpdateDocumentFragment(element, value) {
+			var $el;
+			$el = $(value);
+
+			// If it's a script, unpack it.
+			if (($options = $el.filter('script')).size() > 0) {
+				$el = $($options.html());
+			}
+
+			// Otherwise, append the options and optgroups; or nothing.
+			if (($options = $el.filter('optgroup, option')).size() > 0) {
+				$(element).empty().append($options);
+			} else {
+				$(element).html(config.noContent);
+			}
+		}
+
+		function makeOption (m, k) {
+			var s;
+			s = m.label || 'undefined';
+			return $('<option></option>').attr({value: k}).text(s);
+		}
+
+		function domUpdateObject(element, mapping) {
+			var $el, options;
+			$el = $(element);
+			options = _.map(mapping, makeOption);
+			if (_.isEmpty(options)) {
+				$el.html(config.noContent);
+			} else {
+				$el.empty().append.apply($el, options);
+			}
+		}
+
 		return {
 			update: function (element, valueAccessor, allBindingsAccessor, view) {
 				var config, value, s, $options, $el;
 				config = optionsFor(valueAccessor, allBindingsAccessor);
 
 				value = valueAccessor()();
-				$el = $(value);
 
-				// If it's a script, unpack it.
-				if (($options = $el.filter('script')).size() > 0) {
-					$el = $($options.html());
-				}
-
-				// Otherwise, append the options and optgroups; or nothing.
-				if (($options = $el.filter('optgroup, option')).size() > 0) {
-					$(element).empty().append($options);
+				if (_.isString(value)) {
+					domUpdateDocumentFragment(element, value, config);
+				} else if (_.isObject(value)) {
+					domUpdateObject(element, value, config);
 				} else {
 					$(element).html(config.noContent);
 				}
