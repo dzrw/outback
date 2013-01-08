@@ -72,7 +72,12 @@
 						return modelAttr;
 					} else {
 						changeSet = {};
-						changeSet[modelAttrName] = args[0];
+					    
+					    var val = args[0];
+					    if (!!options.trim)
+                            val = stringTrim(val);
+
+						changeSet[modelAttrName] = val;
 
 						changeSetOptions = {};
 
@@ -746,6 +751,8 @@
 			silent determines whether setting the model triggers validation.
 			The default is false.
 
+            trim pull leading and trailing slashes, defaults to false
+
 		Purpose: The value binding links the associated DOM element’s value
 		with a property on your view model. This is typically useful with
 		form elements such as <input>, <select> and <textarea>.
@@ -758,7 +765,8 @@
 				eventName: 'change',
 				escape: true,
 				silent: false,
-				previewError: true
+				previewError: true,
+				trim: false
 			};
 
 			if ($(element).filter('select').size() > 0) {
@@ -778,6 +786,10 @@
 				config.silent = !!options.silent;
 			}
 
+			if (options && hop(options, 'trim')) {
+			    config.trim = !!options.trim;
+			}
+
 			return config;
 		}
 
@@ -788,7 +800,8 @@
 
 				writeOptions = {
 					silent: config.silent,
-					previewError: config.previewError
+					previewError: config.previewError,
+					trim: config.trim
 				};
 
 				$(element).on(config.eventName, function (e) {
